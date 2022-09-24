@@ -1,2 +1,2 @@
 #! /bin/bash
-echo "The vpc is $VpcId"
+echo "The vpc_id is $VPC_ID"
