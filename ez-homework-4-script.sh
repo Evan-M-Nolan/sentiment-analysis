@@ -1,35 +1,37 @@
 #! /bin/bash
 
-VPC_ID=$(aws ec2 create-vpc --cidr-block 10.0.0.0/24 --query Vpc.VpcId --output text)
+VPC_ID=$(aws ec2 create-vpc --cidr-block 10.0.0.0/24 --query Vpc.VpcId --output text --region us-east-1)
 
 export VPC_ID=$VPC_ID
 
-echo VPC_ID
-
-PUB_SUB_A=$(aws ec2 create-subnet --vpc-id "$VPC_ID" --cidr-block 10.0.0.0/26 --query Subnet.SubnetId --output text)
+PUB_SUB_A=$(aws ec2 create-subnet --vpc-id "$VPC_ID" --cidr-block 10.0.0.0/26 --query Subnet.SubnetId --output text --region us-east-1)
 
 export PUB_SUB_A=$PUB_SUB_A
 
-PUB_SUB_B=$(aws ec2 create-subnet --vpc-id "$VPC_ID" --cidr-block 10.0.0.64/26 --query Subnet.SubnetId --output text)
+PUB_SUB_B=$(aws ec2 create-subnet --vpc-id "$VPC_ID" --cidr-block 10.0.0.64/26 --query Subnet.SubnetId --output text --region us-east-1)
 
 export PUB_SUB_B=$PUB_SUB_B
 
-aws ec2 create-subnet --vpc-id "$VPC_ID" --cidr-block 10.0.0.128/26
+PRIV_SUB_A=$(aws ec2 create-subnet --vpc-id "$VPC_ID" --query Subnet.SubnetId --cidr-block 10.0.0.128/26 --output text --region us-east-1)
 
-aws ec2 create-subnet --vpc-id "$VPC_ID" --cidr-block 10.0.0.192/26
+export PRIV_SUB_A=$PRIV_SUB_A
 
-GATE_ID=$(aws ec2 create-internet-gateway --query InternetGateway.InternetGatewayId --output text)
+PRIV_SUB_B=$(aws ec2 create-subnet --vpc-id "$VPC_ID" --query Subnet.SubnetId --cidr-block 10.0.0.192/26 --output text --region us-east-1)
 
-aws ec2 attach-internet-gateway --vpc-id "$VPC_ID" --internet-gateway-id "$GATE_ID"
+export PRIV_SUB_B=$PRIV_SUB_B
 
-TABLE_ID=$(aws ec2 create-route-table --vpc-id "$VPC_ID" --query RouteTable.RouteTableId --output text)
+GATE_ID=$(aws ec2 create-internet-gateway --query InternetGateway.InternetGatewayId --output text --region us-east-1)
 
-aws ec2 create-route --route-table-id "$TABLE_ID" --destination-cidr-block 0.0.0.0/0 --gateway-id "$GATE_ID"
+export GATE_ID=$GATE_ID
 
-aws ec2 describe-route-tables --route-table-id rtb-c1c8faa6 | cat
+aws ec2 attach-internet-gateway --vpc-id "$VPC_ID" --internet-gateway-id $GATE_ID --region us-east-1
 
-aws ec2 associate-route-table  --subnet-id "$SUB_A" --route-table-id "$TABLE_ID"
+ROUTE_TABLE_ID=$(aws ec2 create-route-table --vpc-id "$VPC_ID" --query RouteTable.RouteTableId --output text --region us-east-1)
 
-aws ec2 modify-subnet-attribute --subnet-id "$SUB_A" --map-public-ip-on-launch
+export ROUTE_TABLE_ID=$ROUTE_TABLE_ID
 
+aws ec2 create-route --route-table-id $ROUTE_TABLE_ID --destination-cidr-block 0.0.0.0/0 --gateway-id $GATE_ID --region us-east-1
 
+aws ec2 associate-route-table --subnet-id "$PUB_SUB_A" --route-table-id $ROUTE_TABLE_ID --region us-east-1
+
+aws ec2 modify-subnet-attribute --subnet-id "$PUB_SUB_A" --map-public-ip-on-launch --region us-east-1
