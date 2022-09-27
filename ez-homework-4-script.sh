@@ -4,9 +4,15 @@ VPC_ID=$(aws ec2 create-vpc --cidr-block 10.0.0.0/24 --query Vpc.VpcId --output 
 
 export VPC_ID=$VPC_ID
 
-SUB_A=$(aws ec2 create-subnet --vpc-id "$VPC_ID" --cidr-block 10.0.0.0/26 --query Subnet.SubnetId --output text)
+echo VPC_ID
 
-aws ec2 create-subnet --vpc-id "$VPC_ID" --cidr-block 10.0.0.64/26
+PUB_SUB_A=$(aws ec2 create-subnet --vpc-id "$VPC_ID" --cidr-block 10.0.0.0/26 --query Subnet.SubnetId --output text)
+
+export PUB_SUB_A=$PUB_SUB_A
+
+PUB_SUB_B=$(aws ec2 create-subnet --vpc-id "$VPC_ID" --cidr-block 10.0.0.64/26 --query Subnet.SubnetId --output text)
+
+export PUB_SUB_B=$PUB_SUB_B
 
 aws ec2 create-subnet --vpc-id "$VPC_ID" --cidr-block 10.0.0.128/26
 
