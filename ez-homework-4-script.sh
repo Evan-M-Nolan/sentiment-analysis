@@ -35,3 +35,22 @@ aws ec2 create-route --route-table-id $ROUTE_TABLE_ID --destination-cidr-block 0
 aws ec2 associate-route-table --subnet-id "$PUB_SUB_A" --route-table-id $ROUTE_TABLE_ID --region us-east-1
 
 aws ec2 modify-subnet-attribute --subnet-id "$PUB_SUB_A" --map-public-ip-on-launch --region us-east-1
+
+aws ec2 create-key-pair --key-name HomeworkKeyPair --query "KeyMaterial" --output text > HomeworkKeyPair.pem
+
+chmod 400 HomeworkKeyPair.pem
+
+GROUP_ID=$(aws ec2 create-security-group --group-name SSHAccess --description "Security group for SSH access" --vpc-id "$VPC_ID")
+
+export GROUP_ID=$GROUP_ID
+
+SECURITY_ID=$(aws ec2 authorize-security-group-ingress --group-id $GROUP_ID --protocol tcp --port 22 --cidr 0.0.0.0/0)
+
+export SECURITY_ID=$SECURITY_ID
+
+EC2_INSTANCE=$(aws ec2 run-instances --image-id ami-a4827dc9 --count 1 --instance-type t2.micro --key-name HomeworkKeyPair --security-group-ids $SECURITY_ID --subnet-id SUB_A)
+
+export EC2_INSTANCE=$EC2_INSTANCE
+
+aws ec2 describe-instances --instance-id $EC2_INSTANCE --query "Reservations[*].Instances[*].{State:State.Name,Address:PublicIpAddress}"
+
