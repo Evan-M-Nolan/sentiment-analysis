@@ -36,21 +36,13 @@ aws ec2 associate-route-table --subnet-id "$PUB_SUB_A" --route-table-id $ROUTE_T
 
 aws ec2 modify-subnet-attribute --subnet-id "$PUB_SUB_A" --map-public-ip-on-launch --region us-east-1
 
-aws ec2 create-key-pair --key-name HomeworkKeyPair --query "KeyMaterial" --output text > HomeworkKeyPair.pem
+aws ec2 create-key-pair --key-name MyKeyPair --query "KeyMaterial" --output text > MyKeyPair.pem --region us-east-1
+chmod 400 MyKeyPair.pem
 
-chmod 400 HomeworkKeyPair.pem
+SECURITY_GROUP_ID=$(aws ec2 create-security-group --group-name SSHAccess --description "Security group for SSH access" --vpc-id $VPC_ID --output text --query GroupId --region us-east-1)
+export SECURITY_GROUP_ID=$SECURITY_GROUP_ID
 
-GROUP_ID=$(aws ec2 create-security-group --group-name SSHAccess --description "Security group for SSH access" --vpc-id "$VPC_ID")
+aws ec2 authorize-security-group-ingress --group-id $SECURITY_GROUP_ID --protocol tcp --port 22 --cidr 0.0.0.0/0 --region us-east-1
 
-export GROUP_ID=$GROUP_ID
-
-SECURITY_ID=$(aws ec2 authorize-security-group-ingress --group-id $GROUP_ID --protocol tcp --port 22 --cidr 0.0.0.0/0)
-
-export SECURITY_ID=$SECURITY_ID
-
-EC2_INSTANCE=$(aws ec2 run-instances --image-id ami-a4827dc9 --count 1 --instance-type t2.micro --key-name HomeworkKeyPair --security-group-ids $SECURITY_ID --subnet-id SUB_A)
-
-export EC2_INSTANCE=$EC2_INSTANCE
-
-aws ec2 describe-instances --instance-id $EC2_INSTANCE --query "Reservations[*].Instances[*].{State:State.Name,Address:PublicIpAddress}"
-
+INSTANCE_ID=$(aws ec2 run-instances --image-id ami-a4827dc9 --count 1 --instance-type t2.micro --key-name MyKeyPair --security-group-ids $SECURITY_GROUP_ID --subnet-id $PUB_SUB_A --query "Instances[0].InstanceId" --output text --region us-east-1)
+export INSTANCE_ID=$INSTANCE_ID
