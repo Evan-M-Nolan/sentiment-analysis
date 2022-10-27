@@ -212,3 +212,72 @@ resource "aws_s3_bucket_object" "json" {
   etag   = filemd5("./${each.value}")
   content_type = "application/json"
 }
+resource "aws_dynamodb_table" "rekognition-analysis-storage-514-team6" {
+  name = "Hashtag"
+  billing_mode = "PROVISIONED"
+  read_capacity = "5"
+  write_capacity = "5"
+  hash_key = "Id"
+  range_key = "CreateDate"
+
+  attribute {
+    name = "Id"
+    type = "S"
+  }
+
+  attribute {
+    name = "CreateDate"
+    type = "N"
+  }
+  
+}
+
+resource "aws_iam_role" "iam_for_lambda" {
+  name = "iam_for_lambda"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+
+  inline_policy {
+    name = "access-dynamodb"
+
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action   = ["dynamodb:Get*", "dynamodb:Query", "dynamodb:Scan"]
+          Effect   = "Allow"
+          Resource = "*"
+        },
+      ]
+    })
+  }
+}
+
+
+resource "aws_lambda_function" "retreive-rekognition-data" {
+  function_name = "get-rekognition-data"
+  role = aws_iam_role.iam_for_lambda.arn
+  filename = "rekognition-dynamo-lambda.zip"
+  runtime = "python3.8"
+  handler = "lambda_function.lambda_handler"
+
+  environment {
+    variables = {
+      dynamodb_name = aws_dynamodb_table.rekognition-analysis-storage-514-team6.name
+    }
+  }
+}
