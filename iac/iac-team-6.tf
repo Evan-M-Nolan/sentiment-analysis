@@ -218,16 +218,30 @@ resource "aws_dynamodb_table" "rekognition-analysis-storage-514-team6" {
   read_capacity = "5"
   write_capacity = "5"
   hash_key = "Id"
-  range_key = "CreateDate"
 
   attribute {
     name = "Id"
     type = "S"
   }
+  
+}
+
+resource "aws_dynamodb_table" "Hashtag-table-514-team6" {
+  name = "Hashtag"
+  billing_mode = "PROVISIONED"
+  read_capacity = "5"
+  write_capacity = "5"
+  hash_key = "Id"
+  range_key = "searchDate"
 
   attribute {
-    name = "CreateDate"
-    type = "N"
+    name = "Id"
+    type = "S"
+  }
+  
+  attribute {
+    name = "searchDate"
+    type = "S"
   }
   
 }
@@ -277,7 +291,8 @@ resource "aws_lambda_function" "retreive-rekognition-data" {
 
   environment {
     variables = {
-      dynamodb_name = aws_dynamodb_table.rekognition-analysis-storage-514-team6.name
+      dynamodb_hashtag = aws_dynamodb_table.Hashtag-table-514-team6.name
+      dynamodb_video = aws_dynamodb_table.Video-table-514-team6.name
     }
   }
 }
