@@ -3,6 +3,7 @@ terraform {
     aws = {
         source = "hashicorp/aws"
         version = "~> 4.35"
+        
     }
   }
 }
@@ -10,6 +11,9 @@ terraform {
 provider "aws" {
   region = "us-east-2"
 
+  access_key = ""
+  secret_key = ""
+  token = ""
 }
 
 resource "aws_s3_bucket" "static-website" {
