@@ -150,3 +150,66 @@ resource "aws_api_gateway_rest_api" "api" {
 #   }
 
 # }
+
+
+#Upload files for static website
+resource "aws_s3_bucket_object" "html" {
+  for_each = fileset("./", "**/*.html")
+
+  bucket = aws_s3_bucket.static-website.id
+  key    = each.value
+  source = "./${each.value}"
+  etag   = filemd5("./${each.value}")
+  content_type = "text/html"
+}
+
+resource "aws_s3_bucket_object" "svg" {
+  for_each = fileset("./", "**/*.svg")
+
+  bucket = aws_s3_bucket.static-website.id
+  key    = each.value
+  source = "./${each.value}"
+  etag   = filemd5("./${each.value}")
+  content_type = "image/svg+xml"
+}
+
+resource "aws_s3_bucket_object" "css" {
+  for_each = fileset("./", "**/*.css")
+
+  bucket = aws_s3_bucket.static-website.id
+  key    = each.value
+  source = "./${each.value}"
+  etag   = filemd5("./${each.value}")
+  content_type = "text/css"
+}
+
+resource "aws_s3_bucket_object" "js" {
+  for_each = fileset("./", "**/*.js")
+
+  bucket = aws_s3_bucket.static-website.id
+  key    = each.value
+  source = "./${each.value}"
+  etag   = filemd5("./${each.value}")
+  content_type = "application/javascript"
+}
+
+
+resource "aws_s3_bucket_object" "images" {
+  for_each = fileset("./", "**/*.png")
+
+  bucket = aws_s3_bucket.static-website.id
+  key    = each.value
+  source = "./${each.value}"
+  etag   = filemd5("./${each.value}")
+  content_type = "image/png"
+}
+
+resource "aws_s3_bucket_object" "json" {
+  for_each = fileset("./", "**/*.json")
+
+  bucket = aws_s3_bucket.static-website.id
+  key    = each.value
+  source = "./${each.value}"
+  etag   = filemd5("./${each.value}")
+  content_type = "application/json"
+}
