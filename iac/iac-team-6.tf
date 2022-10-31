@@ -9,10 +9,14 @@ terraform {
 
 provider "aws" {
   region = "us-east-2"
+
 }
 
+###################################
+#S3 Buckets
+###################################
 resource "aws_s3_bucket" "static-website" {
-  bucket = "static-website-files-514-team6-test"
+  bucket = "static-website-files-514-team6"
 }
 
 resource "aws_s3_bucket_policy" "static-website-policy" {
@@ -39,7 +43,7 @@ resource "aws_s3_bucket_cors_configuration" "static-website-cors" {
 }
 
 resource "aws_s3_bucket" "raw-data-bucket" {
-  bucket = "raw-data-bucket-514-team6-test"
+  bucket = "raw-data-bucket-514-team6"
 }
 
 resource "aws_s3_bucket_acl" "raw-data-butcket-acl" {
@@ -56,11 +60,9 @@ resource "aws_s3_bucket_acl" "processed-data-butcket-acl" {
   acl = "private"
 }
 
-resource "aws_api_gateway_rest_api" "api" {
- name = "api-gateway-514-team6"
- description = "Proxy to handle requests to our API"
-}
-
+###################################
+# CloudFront
+###################################
 resource "aws_cloudfront_origin_access_control" "default" {
   name                              = "default"
   description                       = "S3 Policy"
@@ -69,9 +71,6 @@ resource "aws_cloudfront_origin_access_control" "default" {
   signing_protocol                  = "sigv4"
 }
 
-###################################
-# CloudFront
-###################################
 resource "aws_cloudfront_distribution" "static-website" {
   origin {
     domain_name = aws_s3_bucket.static-website.bucket_regional_domain_name
@@ -112,7 +111,47 @@ resource "aws_cloudfront_distribution" "static-website" {
   }
 }
 
+###################################
+# Gateway
+###################################
+
+resource "aws_api_gateway_rest_api" "api" {
+ name = "api-gateway-514-team6"
+ description = "Proxy to handle requests to our API"
+}
+
+resource "aws_api_gateway_resource" "resource" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
+  path_part   = "{proxy+}"
+}
+resource "aws_api_gateway_method" "method" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_resource.resource.id
+  http_method   = "ANY"
+  authorization = "NONE"
+  request_parameters = {
+    "method.request.path.proxy" = true
+  }
+}
+resource "aws_api_gateway_integration" "integration" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.resource.id
+  http_method = aws_api_gateway_method.method.http_method
+  integration_http_method = "ANY"
+  type = "HTTP_PROXY"
+
+  # will invoke the lambda
+  # uri = aws_lambda_function.lambda.invoke_arn
+ 
+  # adjust to transform the requests into ex: json
+  request_parameters = {
+    "method.request.path.proxy" = true
+  }
+}
+###################################
 #Upload files for static website
+###################################
 resource "aws_s3_bucket_object" "html" {
   for_each = fileset("./", "**/*.html")
 
