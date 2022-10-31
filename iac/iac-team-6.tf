@@ -52,7 +52,7 @@ resource "aws_s3_bucket_acl" "raw-data-butcket-acl" {
 }
 
 resource "aws_s3_bucket" "processed-data-bucket" {
-  bucket = "processed-data-bucket-514-team6-test"
+  bucket = "processed-data-bucket-514-team6"
 }
 
 resource "aws_s3_bucket_acl" "processed-data-butcket-acl" {
