@@ -153,78 +153,64 @@ resource "aws_api_gateway_integration" "integration" {
 #Upload files for static website
 ###################################
 resource "aws_s3_bucket_object" "html" {
-  for_each = fileset("./../frontend", "**/*.html")
+  for_each = fileset("./../frontend/", "**/*.html")
 
   bucket = aws_s3_bucket.static-website.id
   key    = each.value
-  source = "./${each.value}"
-  etag   = filemd5("./${each.value}")
+  source = "./../frontend/${each.value}"
+  etag   = filemd5("./../frontend/${each.value}")
   content_type = "text/html"
 }
 
 resource "aws_s3_bucket_object" "svg" {
-  for_each = fileset("./../frontend", "**/*.svg")
+  for_each = fileset("./../frontend/", "**/*.svg")
 
   bucket = aws_s3_bucket.static-website.id
   key    = each.value
-  source = "./${each.value}"
-  etag   = filemd5("./${each.value}")
+  source = "./../frontend/${each.value}"
+  etag   = filemd5("./../frontend/${each.value}")
   content_type = "image/svg+xml"
 }
 
 resource "aws_s3_bucket_object" "css" {
-  for_each = fileset("./../frontend", "**/*.css")
+  for_each = fileset("./../frontend/", "**/*.css")
 
   bucket = aws_s3_bucket.static-website.id
   key    = each.value
-  source = "./${each.value}"
-  etag   = filemd5("./${each.value}")
+  source = "./../frontend/${each.value}"
+  etag   = filemd5("./../frontend/${each.value}")
   content_type = "text/css"
 }
 
 resource "aws_s3_bucket_object" "js" {
-  for_each = fileset("./../frontend", "**/*.js")
+  for_each = fileset("./../frontend/", "**/*.js")
 
   bucket = aws_s3_bucket.static-website.id
   key    = each.value
-  source = "./${each.value}"
-  etag   = filemd5("./${each.value}")
+  source = "./../frontend/${each.value}"
+  etag   = filemd5("./../frontend/${each.value}")
   content_type = "application/javascript"
 }
 
 
 resource "aws_s3_bucket_object" "images" {
-  for_each = fileset("./../frontend", "**/*.png")
+  for_each = fileset("./../frontend/", "**/*.png")
 
   bucket = aws_s3_bucket.static-website.id
   key    = each.value
-  source = "./${each.value}"
-  etag   = filemd5("./${each.value}")
+  source = "./../frontend/${each.value}"
+  etag   = filemd5("./../frontend/${each.value}")
   content_type = "image/png"
 }
 
 resource "aws_s3_bucket_object" "json" {
-  for_each = fileset("./../frontend", "**/*.json")
+  for_each = fileset("./../frontend/", "**/*.json")
 
   bucket = aws_s3_bucket.static-website.id
   key    = each.value
-  source = "./${each.value}"
-  etag   = filemd5("./${each.value}")
+  source = "./../frontend/${each.value}"
+  etag   = filemd5("./../frontend/${each.value}")
   content_type = "application/json"
-}
-
-resource "aws_dynamodb_table" "rekognition-analysis-storage-514-team6" {
-  name = "Hashtag"
-  billing_mode = "PROVISIONED"
-  read_capacity = "5"
-  write_capacity = "5"
-  hash_key = "Id"
-
-  attribute {
-    name = "Id"
-    type = "S"
-  }
-  
 }
 
 resource "aws_dynamodb_table" "Hashtag-table-514-team6" {
@@ -245,6 +231,19 @@ resource "aws_dynamodb_table" "Hashtag-table-514-team6" {
     type = "N"
   }
   
+}
+
+resource "aws_dynamodb_table" "Video-table-514-team6" {
+  name = "Video"
+  billing_mode = "PROVISIONED"
+  read_capacity = "5"
+  write_capacity = "5"
+  hash_key = "Id"
+
+  attribute {
+    name = "Id"
+    type = "S"
+  }
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
@@ -273,7 +272,37 @@ EOF
       Version = "2012-10-17"
       Statement = [
         {
-          Action   = ["dynamodb:Get*", "dynamodb:Query", "dynamodb:Scan"]
+          Action   = ["dynamodb:Get*", "dynamodb:UpdateItem", "dynamodb:Query", "dynamodb:Scan"]
+          Effect   = "Allow"
+          Resource = "*"
+        },
+      ]
+    })
+  }
+
+  inline_policy {
+    name = "access-rekognition"
+
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action   = ["rekognition:DetectFaces"]
+          Effect   = "Allow"
+          Resource = "*"
+        },
+      ]
+    })
+  }
+
+  inline_policy {
+    name = "read-buckets"
+
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action   = ["s3:GetObject"]
           Effect   = "Allow"
           Resource = "*"
         },
@@ -287,12 +316,11 @@ resource "aws_lambda_function" "store-rekognition-data" {
   role = aws_iam_role.iam_for_lambda.arn
   filename = "rekognition-lambda.zip"
   runtime = "python3.8"
-  handler = "lambda_function.lambda_handler"
+  handler = "rekognition-lambda.lambda_handler"
 
   environment {
     variables = {
       dynamodb_hashtag = aws_dynamodb_table.Hashtag-table-514-team6.name
-      dynamodb_video = aws_dynamodb_table.Video-table-514-team6.name
     }
   }
 }
@@ -307,7 +335,6 @@ resource "aws_lambda_function" "retreive-rekognition-data" {
   environment {
     variables = {
       dynamodb_hashtag = aws_dynamodb_table.Hashtag-table-514-team6.name
-      dynamodb_video = aws_dynamodb_table.Video-table-514-team6.name
     }
   }
 }

@@ -3,4 +3,4 @@
 **/terraform*
 evannolan.*
 .idea
-.env
+secrets.env
