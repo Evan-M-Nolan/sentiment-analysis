@@ -324,6 +324,7 @@ resource "aws_lambda_function" "search-lambda" {
   filename = "search-lambda.zip"
   runtime = "python3.9"
   handler = "searchvideos.lambda_handler"
+  layers = [aws_lambda_layer_version.requests_layer.arn]
 
   environment {
     variables = {
@@ -332,6 +333,12 @@ resource "aws_lambda_function" "search-lambda" {
   }
 
 }
+resource "aws_lambda_layer_version" "requests_layer" {
+  filename   = "requests_layer.zip"
+  layer_name = "requests"
+
+  compatible_runtimes = ["python3.9"]
+}
 
 resource "aws_lambda_function" "download-lambda" {
   function_name = "download-video-to-s3"
@@ -339,6 +346,7 @@ resource "aws_lambda_function" "download-lambda" {
   filename = "youtube-lambda.zip"
   runtime = "python3.9"
   handler = "searchvideos.lambda_handler"
+  layers = [aws_lambda_layer_version.pytube_layer.arn]
 
   environment {
     variables = {
@@ -349,8 +357,14 @@ resource "aws_lambda_function" "download-lambda" {
     size = 10240 # Min 512 MB and the Max 10240 MB
   }
 }
+resource "aws_lambda_layer_version" "pytube_layer" {
+  filename   = "pytube_layer.zip"
+  layer_name = "pytube"
+
+  compatible_runtimes = ["python3.9"]
+}
 #####################
-#Recognition Lambdas
+#Rekognition Lambdas
 #####################
 
 resource "aws_lambda_function" "store-rekognition-data" {
