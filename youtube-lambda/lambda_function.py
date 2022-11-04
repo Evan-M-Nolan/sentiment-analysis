@@ -5,7 +5,7 @@ import os
 s3_client = boto3.client('s3')
 
 def lambda_handler(event, context):
-    bucket = os.environ.get('')
+    bucket = os.environ.get('raw-data-bucket')
     videos = []
     for record in event["body"]:
         videos.append(record)
