@@ -314,6 +314,23 @@ EOF
     })
   }
 }
+###################################
+#Lambdas
+###################################
+
+resource "aws_lambda_function" "search-lambda" {
+  function_name = "search-youtube-for-ids"
+  role = aws_iam_role.iam_for_lambda.arn
+  filename = "search-lambda.zip"
+  runtime = "python3.9"
+  handler = "searchvideos.lambda_handler"
+
+  environment {
+    variables = {
+      raw-data-bucket = aws_s3_bucket.raw-data
+    }
+  }
+}
 
 resource "aws_lambda_function" "store-rekognition-data" {
   function_name = "set-rekognition-data"
