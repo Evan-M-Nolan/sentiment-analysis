@@ -174,6 +174,29 @@ resource "aws_api_gateway_integration" "lambda_info_integration" {
   uri                     = aws_lambda_function.retreive-rekognition-data.invoke_arn
 }
 
+resource "aws_api_gateway_deployment" "gateway_deployment" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+
+  triggers = {
+      redeployment = sha1(jsonencode([
+        aws_api_gateway_resource.rekognition_data_resource.id,
+        aws_api_gateway_resource.search_resource.id,
+        aws_api_gateway_method.search_getmethod.id,
+        aws_api_gateway_integration.lambda_info_integration.id,
+    ]))
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_api_gateway_stage" "gateway_stage" {
+  deployment_id = aws_api_gateway_deployment.gateway_deployment.id
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  stage_name    = "gateway_stage"
+}
+
 resource "aws_lambda_permission" "apigw_lambda" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
