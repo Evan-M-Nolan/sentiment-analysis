@@ -314,6 +314,18 @@ EOF
     })
   }
 }
+
+###################
+# SQS for lambda
+###################
+resource "aws_sqs_queue" "youtube_id_queue" {
+  name                      = "youtube_id_queue"
+  delay_seconds             = 90
+  max_message_size          = 2048
+  message_retention_seconds = 86400
+  receive_wait_time_seconds = 10
+}
+
 ###################################
 #youtube Video Lambdas
 ###################################
@@ -328,7 +340,7 @@ resource "aws_lambda_function" "search-lambda" {
 
   environment {
     variables = {
-      sqs_url = aws_s3_bucket.youtube_id_queue.url
+      sqs_url = aws_sqs_queue.youtube_id_queue.url
     }
   }
 
@@ -357,6 +369,16 @@ resource "aws_lambda_function" "download-lambda" {
     size = 10240 # Min 512 MB and the Max 10240 MB
   }
 }
+##############################
+# SQS to lambda source Mapping
+##############################
+resource "aws_lambda_event_source_mapping" "download_entry" {
+  event_source_arn = aws_sqs_queue.youtube_id_queue.arn
+  function_name    = aws_lambda_function.download-lambda.arn
+}
+##############################
+# Lambda layers
+##############################
 resource "aws_lambda_layer_version" "pytube_layer" {
   filename   = "pytube_layer.zip"
   layer_name = "pytube"
@@ -374,11 +396,6 @@ resource "aws_lambda_function" "store-rekognition-data" {
   runtime = "python3.8"
   handler = "rekognition-lambda.lambda_handler"
 
-  environment {
-    variables = {
-      dynamodb_hashtag = aws_dynamodb_table.Hashtag-table-514-team6.name
-    }
-  }
 }
 
 resource "aws_lambda_function" "retreive-rekognition-data" {
@@ -392,27 +409,5 @@ resource "aws_lambda_function" "retreive-rekognition-data" {
     variables = {
       dynamodb_hashtag = aws_dynamodb_table.Hashtag-table-514-team6.name
     }
-  }
-}
-##############################
-# SQS to lambda source Mapping
-##############################
-resource "aws_lambda_event_source_mapping" "download_entry" {
-  event_source_arn = aws_sqs_queue.youtube_id_queue.arn
-  function_name    = aws_lambda_function.download-lambda.arn
-}
-###################
-# SQS for lambda
-###################
-resource "aws_sqs_queue" "youtube_id_queue" {
-  name                      = "youtube_id_queue"
-  delay_seconds             = 90
-  max_message_size          = 2048
-  message_retention_seconds = 86400
-  receive_wait_time_seconds = 10
-  redrive_policy            = "{\"deadLetterTargetArn\":\"${aws_sqs_queue.terraform_queue_deadletter.arn}\",\"maxReceiveCount\":4}"
-
-  tags {
-    Environment = "production"
   }
 }
