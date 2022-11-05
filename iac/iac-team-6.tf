@@ -376,7 +376,7 @@ resource "aws_lambda_function" "search-lambda" {
   filename = "search-lambda.zip"
   runtime = "python3.9"
   handler = "searchvideos.lambda_handler"
-  layers = [aws_lambda_layer_version.requests_layer.arn]
+  layers = [aws_lambda_layer_version.request_layer.arn]
 
   environment {
     variables = {
@@ -385,8 +385,8 @@ resource "aws_lambda_function" "search-lambda" {
   }
 
 }
-resource "aws_lambda_layer_version" "requests_layer" {
-  filename   = "requests_layer.zip"
+resource "aws_lambda_layer_version" "request_layer" {
+  filename   = "request_layer.zip"
   layer_name = "requests"
 
   compatible_runtimes = ["python3.9"]
@@ -400,11 +400,11 @@ resource "aws_lambda_function" "download-lambda" {
   handler = "searchvideos.lambda_handler"
   layers = [aws_lambda_layer_version.pytube_layer.arn]
 
-  environment {
-    variables = {
-      raw-data-bucket = aws_s3_bucket.raw-data-bucket.arn
-    }
-  }
+#  environment {
+#    variables = {
+#      raw-data-bucket = "raw-data-bucket-514-team6"
+#    }
+#  }
   ephemeral_storage {
     size = 10240 # Min 512 MB and the Max 10240 MB
   }
@@ -412,10 +412,11 @@ resource "aws_lambda_function" "download-lambda" {
 ##############################
 # SQS to lambda source Mapping
 ##############################
-resource "aws_lambda_event_source_mapping" "download_entry" {
-  event_source_arn = aws_sqs_queue.youtube_id_queue.arn
-  function_name    = aws_lambda_function.download-lambda.arn
-}
+#resource "aws_lambda_event_source_mapping" "download_entry" {
+#  event_source_arn = aws_sqs_queue.youtube_id_queue.arn
+#  function_name    = aws_lambda_function.download-lambda.arn
+#}
+
 ##############################
 # Lambda layers
 ##############################
@@ -425,6 +426,23 @@ resource "aws_lambda_layer_version" "pytube_layer" {
 
   compatible_runtimes = ["python3.9"]
 }
+
+resource "aws_s3_bucket_notification" "aws-lambda-trigger" {
+  bucket = aws_s3_bucket.processed-data-bucket.id
+  lambda_function {
+    lambda_function_arn = aws_lambda_function.store-rekognition-data.arn
+    events              = ["s3:ObjectCreated:*"]
+  }
+}
+
+resource "aws_lambda_permission" "test" {
+  statement_id  = "AllowS3Invoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.store-rekognition-data.function_name
+  principal = "s3.amazonaws.com"
+  source_arn = "arn:aws:s3:::${aws_s3_bucket.processed-data-bucket.id}"
+}
+
 #####################
 #Rekognition Lambdas
 #####################
