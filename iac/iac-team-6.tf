@@ -3,6 +3,7 @@ terraform {
     aws = {
         source = "hashicorp/aws"
         version = "~> 4.35"
+        
     }
   }
 }
@@ -10,6 +11,9 @@ terraform {
 provider "aws" {
   region = "us-east-2"
 
+  access_key = ""
+  secret_key = ""
+  token = ""
 }
 
 variable "accountId" {
@@ -342,6 +346,98 @@ EOF
   }
 }
 
+###################
+# SQS for lambda
+###################
+resource "aws_sqs_queue" "youtube_id_queue" {
+  name                      = "youtube_id_queue"
+  delay_seconds             = 90
+  max_message_size          = 2048
+  message_retention_seconds = 86400
+  receive_wait_time_seconds = 10
+}
+
+###################################
+#youtube Video Lambdas
+###################################
+
+resource "aws_lambda_function" "search-lambda" {
+  function_name = "search-youtube-for-ids"
+  role = aws_iam_role.iam_for_lambda.arn
+  filename = "search-lambda.zip"
+  runtime = "python3.9"
+  handler = "searchvideos.lambda_handler"
+  layers = [aws_lambda_layer_version.request_layer.arn]
+
+  environment {
+    variables = {
+      sqs_url = aws_sqs_queue.youtube_id_queue.url
+    }
+  }
+
+}
+resource "aws_lambda_layer_version" "request_layer" {
+  filename   = "request_layer.zip"
+  layer_name = "requests"
+
+  compatible_runtimes = ["python3.9"]
+}
+
+resource "aws_lambda_function" "download-lambda" {
+  function_name = "download-video-to-s3"
+  role = aws_iam_role.iam_for_lambda.arn
+  filename = "youtube-lambda.zip"
+  runtime = "python3.9"
+  handler = "searchvideos.lambda_handler"
+  layers = [aws_lambda_layer_version.pytube_layer.arn]
+
+#  environment {
+#    variables = {
+#      raw-data-bucket = "raw-data-bucket-514-team6"
+#    }
+#  }
+  ephemeral_storage {
+    size = 10240 # Min 512 MB and the Max 10240 MB
+  }
+}
+##############################
+# SQS to lambda source Mapping
+##############################
+#resource "aws_lambda_event_source_mapping" "download_entry" {
+#  event_source_arn = aws_sqs_queue.youtube_id_queue.arn
+#  function_name    = aws_lambda_function.download-lambda.arn
+#}
+
+##############################
+# Lambda layers
+##############################
+resource "aws_lambda_layer_version" "pytube_layer" {
+  filename   = "pytube_layer.zip"
+  layer_name = "pytube"
+
+  compatible_runtimes = ["python3.9"]
+}
+
+resource "aws_s3_bucket_notification" "aws-lambda-trigger" {
+  bucket = aws_s3_bucket.processed-data-bucket.id
+  lambda_function {
+    lambda_function_arn = aws_lambda_function.store-rekognition-data.arn
+    events              = ["s3:ObjectCreated:*"]
+  }
+}
+
+resource "aws_lambda_permission" "test" {
+  statement_id  = "AllowS3Invoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.store-rekognition-data.function_name
+  principal = "s3.amazonaws.com"
+  source_arn = "arn:aws:s3:::${aws_s3_bucket.processed-data-bucket.id}"
+}
+
+#####################
+#Rekognition Lambdas
+#####################
+
 resource "aws_lambda_function" "store-rekognition-data" {
   function_name = "set-rekognition-data"
   role = aws_iam_role.iam_for_lambda.arn
@@ -349,11 +445,6 @@ resource "aws_lambda_function" "store-rekognition-data" {
   runtime = "python3.8"
   handler = "rekognition-lambda.lambda_handler"
 
-  environment {
-    variables = {
-      dynamodb_hashtag = aws_dynamodb_table.Hashtag-table-514-team6.name
-    }
-  }
 }
 
 resource "aws_lambda_function" "retreive-rekognition-data" {
