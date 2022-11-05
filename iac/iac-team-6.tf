@@ -402,7 +402,7 @@ resource "aws_lambda_function" "download-lambda" {
 
   environment {
     variables = {
-      raw-data-bucket = aws_s3_bucket.raw-data-bucket.bucket
+      raw-data-bucket = aws_s3_bucket.raw-data-bucket.arn
     }
   }
   ephemeral_storage {
