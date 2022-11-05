@@ -48,6 +48,7 @@ resource "aws_s3_bucket_cors_configuration" "static-website-cors" {
 
 resource "aws_s3_bucket" "raw-data-bucket" {
   bucket = "raw-data-bucket-514-team6"
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_acl" "raw-data-butcket-acl" {
@@ -57,6 +58,7 @@ resource "aws_s3_bucket_acl" "raw-data-butcket-acl" {
 
 resource "aws_s3_bucket" "processed-data-bucket" {
   bucket = "processed-data-bucket-514-team6"
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_acl" "processed-data-butcket-acl" {
@@ -124,34 +126,35 @@ resource "aws_api_gateway_rest_api" "api" {
  description = "Proxy to handle requests to our API"
 }
 
-resource "aws_api_gateway_resource" "resource" {
+resource "aws_api_gateway_resource" "rekognition_data_resource" {
   rest_api_id = aws_api_gateway_rest_api.api.id
   parent_id   = aws_api_gateway_rest_api.api.root_resource_id
-  path_part   = "{proxy+}"
+  path_part   = "rekognitionData"
 }
+
 resource "aws_api_gateway_method" "method" {
   rest_api_id   = aws_api_gateway_rest_api.api.id
-  resource_id   = aws_api_gateway_resource.resource.id
-  http_method   = "ANY"
+  resource_id   = aws_api_gateway_resource.rekognition_data_resource.id
+  http_method   = "GET"
   authorization = "NONE"
-  request_parameters = {
-    "method.request.path.proxy" = true
-  }
+#  request_parameters = {
+#    "method.request.path.proxy" = true
+#  }
 }
 resource "aws_api_gateway_integration" "integration" {
   rest_api_id = aws_api_gateway_rest_api.api.id
-  resource_id = aws_api_gateway_resource.resource.id
+  resource_id = aws_api_gateway_resource.rekognition_data_resource.id
   http_method = aws_api_gateway_method.method.http_method
   integration_http_method = "ANY"
-  type = "HTTP_PROXY"
+  type = "AWS_PROXY"
 
   # will invoke the lambda
-  # uri = aws_lambda_function.lambda.invoke_arn
+   uri = aws_lambda_function.retreive-rekognition-data.invoke_arn
  
   # adjust to transform the requests into ex: json
-  request_parameters = {
-    "method.request.path.proxy" = true
-  }
+#  request_parameters = {
+#    "method.request.path.proxy" = true
+#  }
 }
 
 resource "aws_api_gateway_resource" "search_resource" {
