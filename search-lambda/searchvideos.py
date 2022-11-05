@@ -17,6 +17,11 @@ def lambda_handler(event, context):
     for item in json_resp["items"]:
         video_id = (item["id"]["videoId"])
         youtube_id_list.append(video_id)
+
+    #         need to put hashtag in table here
+    #     dynamodb_client = boto3.client("dynamodb")
+    #     dynamodb_client.put_item(TableName="Hashtag" Item={'Id':{'N':},'name':{'S':query}, 'videoIDs':{'SS':youtube_id_list}, 'searchDate':{'S':date.today()} }
+
     message = {
         'statusCode': 200,
         'body': youtube_id_list
