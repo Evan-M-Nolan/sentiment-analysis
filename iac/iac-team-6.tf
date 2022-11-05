@@ -12,6 +12,10 @@ provider "aws" {
 
 }
 
+variable "accountId" {
+  
+}
+
 ###################################
 #S3 Buckets
 ###################################
@@ -149,6 +153,39 @@ resource "aws_api_gateway_integration" "integration" {
     "method.request.path.proxy" = true
   }
 }
+
+resource "aws_api_gateway_resource" "search_resource" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
+  path_part   = "search"
+}
+
+resource "aws_api_gateway_method" "search_getmethod" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.search_resource.id
+  http_method = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "lambda_info_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.api.id
+  resource_id             = aws_api_gateway_resource.search_resource.id
+  http_method             = aws_api_gateway_method.search_getmethod.http_method
+  integration_http_method = "GET"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.retreive-rekognition-data.invoke_arn
+}
+
+resource "aws_lambda_permission" "apigw_lambda" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.retreive-rekognition-data.function_name
+  principal     = "apigateway.amazonaws.com"
+
+  # More: http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-control-access-using-iam-policies-to-invoke-api.html
+  source_arn = "arn:aws:execute-api:us-east-2:${var.accountId}:${aws_api_gateway_rest_api.api.id}/*/${aws_api_gateway_method.search_getmethod.http_method}${aws_api_gateway_resource.search_resource.path}"
+}
+
 ###################################
 #Upload files for static website
 ###################################
@@ -335,6 +372,7 @@ resource "aws_lambda_function" "retreive-rekognition-data" {
   environment {
     variables = {
       dynamodb_hashtag = aws_dynamodb_table.Hashtag-table-514-team6.name
+      dynamodb_video = aws_dynamodb_table.Video-table-514-team6.name
     }
   }
 }
