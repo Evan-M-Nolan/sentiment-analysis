@@ -450,7 +450,7 @@ resource "aws_lambda_function" "store-rekognition-data" {
 resource "aws_lambda_function" "retreive-rekognition-data" {
   function_name = "get-rekognition-data"
   role = aws_iam_role.iam_for_lambda.arn
-  filename = "retreive-dynamo-info.zip"
+  filename = "search-dynamo-lambda.zip"
   runtime = "python3.8"
   handler = "lambda_function.lambda_handler"
 
