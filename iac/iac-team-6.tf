@@ -133,7 +133,7 @@ resource "aws_api_gateway_rest_api" "api" {
 resource "aws_api_gateway_integration" "integration" {
   rest_api_id = aws_api_gateway_rest_api.api.id
   resource_id = aws_api_gateway_resource.rekognition_data_resource.id
-  http_method = aws_api_gateway_method.method.http_method
+  http_method = aws_api_gateway_method.search_getmethod.http_method
   integration_http_method = "ANY"
   type = "AWS_PROXY"
 
@@ -165,13 +165,27 @@ resource "aws_api_gateway_method" "search_getmethod" {
   authorization = "NONE"
 }
 
+resource "aws_api_gateway_method_response" "search_getmethod_response" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.search_resource.id 
+  http_method = aws_api_gateway_method.search_getmethod.http_method
+  status_code = 200
+}
+
 resource "aws_api_gateway_integration" "lambda_info_integration" {
   rest_api_id             = aws_api_gateway_rest_api.api.id
   resource_id             = aws_api_gateway_resource.search_resource.id
   http_method             = aws_api_gateway_method.search_getmethod.http_method
-  integration_http_method = "GET"
+  integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = aws_lambda_function.retreive-rekognition-data.invoke_arn
+}
+
+resource "aws_api_gateway_integration_response" "info_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.search_resource.id
+  http_method = aws_api_gateway_method.search_getmethod.http_method
+  status_code = aws_api_gateway_method_response.search_getmethod_response.status_code
 }
 
 resource "aws_lambda_permission" "apigw_lambda" {
