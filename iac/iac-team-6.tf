@@ -23,13 +23,29 @@ variable "accountId" {
 ###################################
 #S3 Buckets
 ###################################
+
 resource "aws_s3_bucket" "static-website" {
   bucket = "static-website-files-514-team6"
 }
 
 resource "aws_s3_bucket_policy" "static-website-policy" {
   bucket = aws_s3_bucket.static-website.id
-  policy = file("policy.json")
+  policy = <<EOF
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+        "Principal": "*",
+          "Action": "s3:GetObject",
+          "Resource": [
+            "${aws_s3_bucket.static-website.arn}",
+            "${aws_s3_bucket.static-website.arn}/*"
+          ]
+        }
+      ]
+    }
+    EOF
 }
 
 resource "aws_s3_bucket_acl" "static-website-acl" {
@@ -60,15 +76,58 @@ resource "aws_s3_bucket_acl" "raw-data-butcket-acl" {
   acl = "private"
 }
 
+
+/* 
+  FE will fetch data from here. Store data in data.csv file.
+  Format Ex: 
+  topic,text
+  dogs,some text
+  soccer,some text
+  midterms,some text
+  food,some text
+*/
 resource "aws_s3_bucket" "processed-data-bucket" {
   bucket = "processed-data-bucket-514-team6"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_policy" "processed-data-bucket-policy" {
+  bucket = aws_s3_bucket.processed-data-bucket.id
+    policy = <<EOF
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+        "Principal": "*",
+          "Action": [ "s3:*" ],
+          "Resource": [
+            "${aws_s3_bucket.processed-data-bucket.arn}",
+            "${aws_s3_bucket.processed-data-bucket.arn}/*"
+          ]
+        }
+      ]
+    }
+    EOF
 }
 
 resource "aws_s3_bucket_acl" "processed-data-butcket-acl" {
   bucket = aws_s3_bucket.processed-data-bucket.id
   acl = "private"
 }
+resource "aws_s3_bucket_cors_configuration" "processed-data-butcket-cors" {
+  bucket = aws_s3_bucket.processed-data-bucket.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "POST"]
+    allowed_origins = ["*"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
+
+}
+
 
 ###################################
 # CloudFront
