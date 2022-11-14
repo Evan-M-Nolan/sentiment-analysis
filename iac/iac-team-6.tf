@@ -17,7 +17,7 @@ provider "aws" {
 }
 
 variable "accountId" {
-  
+
 }
 
 ###################################
@@ -35,8 +35,9 @@ resource "aws_s3_bucket_policy" "static-website-policy" {
       "Version": "2012-10-17",
       "Statement": [
         {
+          "Sid": "PublicRead",
           "Effect": "Allow",
-        "Principal": "*",
+          "Principal": "*",
           "Action": "s3:GetObject",
           "Resource": [
             "${aws_s3_bucket.static-website.arn}",
@@ -93,14 +94,15 @@ resource "aws_s3_bucket" "processed-data-bucket" {
 
 resource "aws_s3_bucket_policy" "processed-data-bucket-policy" {
   bucket = aws_s3_bucket.processed-data-bucket.id
-    policy = <<EOF
+  policy = <<EOF
     {
       "Version": "2012-10-17",
       "Statement": [
         {
+          "Sid": "PublicRead",
           "Effect": "Allow",
-        "Principal": "*",
-          "Action": [ "s3:*" ],
+          "Principal": "*",
+          "Action": "s3:GetObject",
           "Resource": [
             "${aws_s3_bucket.processed-data-bucket.arn}",
             "${aws_s3_bucket.processed-data-bucket.arn}/*"
