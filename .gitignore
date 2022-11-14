@@ -4,3 +4,5 @@
 evannolan.*
 .idea
 secrets.env
+.env
+/node_modules/**
