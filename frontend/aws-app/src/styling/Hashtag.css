@@ -1,0 +1,18 @@
+#HashtagContainer {
+    background: ghostwhite; 
+    font-size: 20px; 
+    padding: 30px; 
+    border: 1px solid lightgray; 
+    margin: 10px;
+    width: 100%;
+}
+
+#SentimentAnalysis {
+    text-align: center;
+    font-family: 'Bowlby One SC', cursive;
+    width: 500px;
+    height: 320px;
+    margin: 0 auto;
+    word-wrap: break-word;
+    color: black;
+}

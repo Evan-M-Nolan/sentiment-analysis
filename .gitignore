@@ -4,3 +4,5 @@
 evannolan.*
 .idea
 secrets.env
+.env
+/frontend/aws-app/node_modules/**
