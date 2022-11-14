@@ -11,8 +11,8 @@ terraform {
 provider "aws" {
   region = "us-east-2"
 
-  access_key = ""
-  secret_key = ""
+  access_key = "AKIASLYTBHMFB5PJCQPA"
+  secret_key = "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"
   token = ""
 }
 
@@ -189,13 +189,16 @@ resource "aws_api_gateway_rest_api" "api" {
  description = "Proxy to handle requests to our API"
 }
 
-resource "aws_api_gateway_integration" "integration" {
+resource "aws_api_gateway_integration" "lambda-integration" {
   rest_api_id = aws_api_gateway_rest_api.api.id
   resource_id = aws_api_gateway_resource.rekognition_data_resource.id
   http_method = aws_api_gateway_method.search_getmethod.http_method
   integration_http_method = "ANY"
   type = "AWS_PROXY"
 
+  depends_on = [
+    aws_api_gateway_integration.lambda-integration
+  ]
   # will invoke the lambda
    uri = aws_lambda_function.retreive-rekognition-data.invoke_arn
  
@@ -417,6 +420,18 @@ EOF
       ]
     })
   }
+  inline_policy {
+    name = "sqs-access"
+    policy = jsonencode({
+      Version = "2012-10-17",
+      Statement = [
+        {
+          Effect= "Allow",
+          Action= "sqs:*",
+          Resource = "*"
+        }]
+    })
+  }
 }
 
 ###################
@@ -429,6 +444,7 @@ resource "aws_sqs_queue" "youtube_id_queue" {
   message_retention_seconds = 86400
   receive_wait_time_seconds = 10
 }
+
 
 ###################################
 #youtube Video Lambdas
