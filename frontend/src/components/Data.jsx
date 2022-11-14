@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import AWS from 'aws-sdk';
-import RenderData from '../components/RenderData'
+import RenderData from './RenderData'
 
 export default class Data extends Component {
 
