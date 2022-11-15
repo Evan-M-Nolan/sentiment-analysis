@@ -1,5 +1,5 @@
 import Input from './components/Input'
-import Data from './components/Data';
+import Topic from './components/Topic'
 import './styling/App.css';
 
 function App() {
@@ -7,7 +7,7 @@ function App() {
   return (
     <div className="App">
       <Input/>
-      <Data/>
+      <Topic name="news" />
     </div>
   );
 }

@@ -263,6 +263,7 @@ resource "aws_api_gateway_stage" "gateway_stage" {
   deployment_id = aws_api_gateway_deployment.gateway_deployment.id
   rest_api_id   = aws_api_gateway_rest_api.api.id
   stage_name    = "gateway_stage"
+}
 resource "aws_api_gateway_integration_response" "info_integration_response" {
   rest_api_id = aws_api_gateway_rest_api.api.id
   resource_id = aws_api_gateway_resource.search_resource.id
