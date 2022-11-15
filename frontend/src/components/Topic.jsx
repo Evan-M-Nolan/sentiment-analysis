@@ -4,7 +4,6 @@ import { useInterval } from "../hooks/useInterval";
 import Card from 'react-bootstrap/Card';
 import { PieChart } from 'react-minimal-pie-chart';
 import randomColor from 'randomcolor';
-import { format } from 'date-fns';
 
 
 export default function Topic(props) {
@@ -23,8 +22,8 @@ export default function Topic(props) {
         .then(data => {
             let pieData = []
             
-            pieData.push({title: 'one', value: data.smilePercent*100, color: randomColor() })
-            pieData.push({title: 'two', value: 100-(data.smilePercent*100), color: randomColor() })
+            pieData.push({title: 'Smiling: ', value: data.smilePercent*100, color: randomColor() })
+            pieData.push({title: 'Not smiling: ', value: 100-(data.smilePercent*100), color: randomColor() })
             return {
                 pieData: pieData,
                 startDate: data.startDate,
@@ -42,7 +41,7 @@ export default function Topic(props) {
                 <Card.Body>
                 <Card.Title> {props.name} ({topic.startDate} - {topic.endDate}) </Card.Title>
                     <Card.Text>
-                        <PieChart label={({ dataEntry }) => dataEntry.value} 
+                        <PieChart label={({ dataEntry }) => dataEntry.title + dataEntry.value + '%'} 
                         labelStyle={{"font-size": 6}}
                         radius={50} 
                         data={topic.pieData}/>
