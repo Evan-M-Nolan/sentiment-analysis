@@ -232,7 +232,7 @@ resource "aws_api_gateway_integration_response" "info_integration_response" {
 }
 
 ########
-# video search api
+# video search api TODO 
 ########
 resource "aws_api_gateway_resource" "video_id_search_resource" {
   rest_api_id = aws_api_gateway_rest_api.api.id
@@ -249,7 +249,7 @@ resource "aws_api_gateway_method" "video_search" {
 resource "aws_api_gateway_integration" "search_lambda_integration" {
   rest_api_id = aws_api_gateway_rest_api.api.id
   resource_id = aws_api_gateway_resource.video_id_search_resource.id
-  http_method = "ANY"
+  http_method = "POST"
 
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
@@ -475,8 +475,18 @@ EOF
   inline_policy {
     name = "log-writing-access"
     policy = jsonencode({
-
-      
+      Version = "2012-10-17",
+      Statement = [
+          {
+            Effect = "Allow",
+            Action = [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+            ],
+            Resource = "*"
+          }
+      ]
     })
   }
 }
@@ -547,13 +557,13 @@ resource "aws_lambda_function" "download-lambda" {
   }
 }
 ##############################
-# SQS to lambda source Mapping
+# SQS to lambda source Mapping I GUESS THIS JUST EXSISTS ALREADY
 ##############################
-resource "aws_lambda_event_source_mapping" "download_entry" {
- event_source_arn = aws_sqs_queue.youtube_id_queue.arn
- function_name    = aws_lambda_function.download-lambda.arn
- enabled = true
-}
+# resource "aws_lambda_event_source_mapping" "download_entry" {
+#  event_source_arn = aws_sqs_queue.youtube_id_queue.arn
+#  function_name    = aws_lambda_function.download-lambda.arn
+#  enabled = true
+# }
 
 ##############################
 # Lambda layers
