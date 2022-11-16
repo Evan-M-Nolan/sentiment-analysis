@@ -1,13 +1,11 @@
-import RenderResults from './components/RenderResults';
-import Topic from './components/Topic';
+import Dashboard from './components/Dashboard';
 import './styling/App.css';
 
 function App() {
 
   return (
     <div className="App">
-      <RenderResults/>
-      <Topic name='news'/>
+        <Dashboard />
     </div>
   );
 }
