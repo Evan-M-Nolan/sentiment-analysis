@@ -243,10 +243,10 @@ resource "aws_api_gateway_resource" "video_id_search_resource" {
 resource "aws_api_gateway_method" "video_search" {
   rest_api_id   = aws_api_gateway_rest_api.api.id
   resource_id   = aws_api_gateway_resource.video_id_search_resource.id
-  http_method   = "GET"
+  http_method   = "POST"
   authorization = "NONE"
 }
-resource "aws_api_gateway_integration" "search_lambda" {
+resource "aws_api_gateway_integration" "search_lambda_integration" {
   rest_api_id = aws_api_gateway_rest_api.api.id
   resource_id = aws_api_gateway_resource.video_id_search_resource.id
   http_method = "ANY"
@@ -435,13 +435,13 @@ EOF
   }
 
   inline_policy {
-    name = "read-buckets"
+    name = "buckets-access"
 
     policy = jsonencode({
       Version = "2012-10-17"
       Statement = [
         {
-          Action   = ["s3:GetObject"]
+          Action   = ["s3:*"]
           Effect   = "Allow"
           Resource = "*"
         },
@@ -472,6 +472,13 @@ EOF
         }]
     })
   }
+  inline_policy {
+    name = "log-writing-access"
+    policy = jsonencode({
+
+      
+    })
+  }
 }
 
 ###################
@@ -483,6 +490,7 @@ resource "aws_sqs_queue" "youtube_id_queue" {
   max_message_size          = 2048
   message_retention_seconds = 86400
   receive_wait_time_seconds = 10
+  visibility_timeout_seconds = 300
 }
 
 ##################################
@@ -494,7 +502,7 @@ resource "aws_lambda_function" "kickoff-lambda" {
   role = aws_iam_role.iam_for_lambda.arn
   filename ="kickoff-lambda.zip"
   runtime = "python3.9"
-  handler = "lambda-handler.lambda_handler"
+  handler = "kickoff_function.lambda_handler"
 }
 
 
@@ -507,7 +515,7 @@ resource "aws_lambda_function" "search-lambda" {
   role = aws_iam_role.iam_for_lambda.arn
   filename = "search-lambda.zip"
   runtime = "python3.9"
-  handler = "searchvideos.lambda_handler"
+  handler = "video_search_function.lambda_handler"
   layers = [aws_lambda_layer_version.request_layer.arn]
 
   environment {
@@ -529,14 +537,11 @@ resource "aws_lambda_function" "download-lambda" {
   role = aws_iam_role.iam_for_lambda.arn
   filename = "youtube-lambda.zip"
   runtime = "python3.9"
-  handler = "searchvideos.lambda_handler"
+  memory_size = 3008
+  timeout = 300
+  handler = "download_lambda.lambda_handler"
   layers = [aws_lambda_layer_version.pytube_layer.arn]
 
-#  environment {
-#    variables = {
-#      raw-data-bucket = "raw-data-bucket-514-team6"
-#    }
-#  }
   ephemeral_storage {
     size = 10240 # Min 512 MB and the Max 10240 MB
   }
@@ -544,10 +549,11 @@ resource "aws_lambda_function" "download-lambda" {
 ##############################
 # SQS to lambda source Mapping
 ##############################
-# resource "aws_lambda_event_source_mapping" "download_entry" {
-#  event_source_arn = aws_sqs_queue.youtube_id_queue.arn
-#  function_name    = aws_lambda_function.download-lambda.arn
-# }
+resource "aws_lambda_event_source_mapping" "download_entry" {
+ event_source_arn = aws_sqs_queue.youtube_id_queue.arn
+ function_name    = aws_lambda_function.download-lambda.arn
+ enabled = true
+}
 
 ##############################
 # Lambda layers
