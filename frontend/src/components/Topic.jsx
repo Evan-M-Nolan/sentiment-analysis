@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useState } from "react";
 import { useInterval } from "../hooks/useInterval";
-import Card from 'react-bootstrap/Card';
+import {Card} from 'semantic-ui-react';
 import { PieChart } from 'react-minimal-pie-chart';
 import randomColor from 'randomcolor';
 
@@ -23,7 +23,7 @@ export default function Topic(props) {
             let pieData = []
             
             pieData.push({title: 'Smiling: ', value: data.smilePercent*100, color: randomColor() })
-            pieData.push({title: 'Not smiling: ', value: 100-(data.smilePercent*100), color: randomColor() })
+            pieData.push({title: 'Not smiling: ', value: 100-(data.smilePercent*100), color: randomColor({luminosity: 'light'}) })
             return {
                 pieData: pieData,
                 startDate: data.startDate,
@@ -33,21 +33,23 @@ export default function Topic(props) {
         .then(data => {
             setTopic(data);
         })
-    }, [pollCount]);
+    }, [pollCount, props.name]);
 
     return (
-        <div style={{padding: 16}}>
-            <Card style={{width: '40vw'}}>
-                <Card.Body>
-                <Card.Title> {props.name} ({topic.startDate} - {topic.endDate}) </Card.Title>
-                    <Card.Text>
-                        <PieChart label={({ dataEntry }) => dataEntry.title + dataEntry.value + '%'} 
-                        labelStyle={{"font-size": 6}}
-                        radius={50} 
-                        data={topic.pieData}/>
-                    </Card.Text>
-                </Card.Body>
+            <Card fluid>
+                <div style={{padding: "1.5vh"}}>
+                    <PieChart label={({ dataEntry }) => dataEntry.title + dataEntry.value + '%'}
+                              labelStyle={{"fontSize": 6}}
+                              radius={50}
+                              data={topic.pieData}
+                    />
+                </div>
+                <Card.Content>
+                <Card.Header> {props.name} ({topic.startDate} - {topic.endDate}) </Card.Header>
+                    <Card.Description>
+
+                    </Card.Description>
+                </Card.Content>
             </Card> 
-        </div>
     );
 }

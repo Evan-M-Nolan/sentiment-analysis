@@ -1,52 +1,56 @@
 import React, { useState, useCallback } from 'react'
-import InputGroup from 'react-bootstrap/InputGroup';
-import Button from 'react-bootstrap/Button';
-import Form from 'react-bootstrap/Form';
-import Modal from 'react-bootstrap/Modal'
+import {Modal, Button, Input} from 'semantic-ui-react';
 import Topic from '../components/Topic';
-import '../styling/RenderResults.css'
+import './../styling/RenderResults.css';
+
 export default function RenderResults(props) {
-  const [input, setInput] = useState("");
-  const [topic, setTopic] = useState("");
-  const [show, setShow] = useState(false);
+    const [input, setInput] = useState("");
+    const [topic, setTopic] = useState("");
+    const [show, setShow] = useState(false);
 
-  const onClick = useCallback(() => {
-    setTopic(input)
-    handleShow()
-  },[input])
+    const onSearch = useCallback(() => {
+        setTopic(input)
+        showModal()
+    },[input])
 
+    const onEnter = (e) => {
+        if (e.key === 'Enter'){
+            onSearch()
+        }
+    }
 
     const handleClose = () => setShow(false);
-    const handleShow = () => setShow(true);
-  
+    const showModal = () => setShow(true);
+
     return (
         <>
-      <InputGroup className="w-50" size="lg">
-        <Form.Control
-          placeholder="topic"
-          onChange={e => setInput(e.target.value)}
-        />
-        <Button variant="primary" type="submit" onClick={onClick}>
-        Search
-      </Button>
-      </InputGroup>
-  
-        <Modal 
-        show={show} 
-        onHide={handleClose}
-        dialogClassName = 'modal-width'
-        >
-          <Modal.Header closeButton>
-            <Modal.Title>Analysing: {topic}</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>Here are the results: </Modal.Body>
-          <Topic name={topic}/>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={handleClose}>
-              Close
-            </Button>
-          </Modal.Footer>
-        </Modal>
-      </>
+            <Input
+                className="w-50"
+                placeholder="topic"
+                icon={{ name: 'search', circular: true, link: true }}
+                onKeyDown={onEnter}
+                onChange={e => setInput(e.target.value)}
+                size={'big'}
+            >
+            </Input>
+
+            <Modal
+                className={"modal-width"}
+                open={show}
+            >
+                <Modal.Header>
+                  Analysing: {topic}
+                </Modal.Header>
+                <Modal.Content>
+                    <Topic name={topic}/>
+                </Modal.Content>
+
+                <Modal.Actions>
+                    <Button variant="secondary" onClick={handleClose}>
+                        Close
+                    </Button>
+                </Modal.Actions>
+            </Modal>
+        </>
     )
 }
