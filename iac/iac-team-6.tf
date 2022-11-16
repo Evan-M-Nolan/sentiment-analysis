@@ -191,22 +191,6 @@ resource "aws_api_gateway_rest_api" "api" {
  description = "Proxy to handle requests to our API"
 }
 
-resource "aws_api_gateway_integration" "integration" {
-  rest_api_id = aws_api_gateway_rest_api.api.id
-  resource_id = aws_api_gateway_resource.rekognition_data_resource.id
-  http_method = aws_api_gateway_method.search_getmethod.http_method
-  integration_http_method = "ANY"
-  type = "AWS_PROXY"
-
-  # will invoke the lambda
-   uri = aws_lambda_function.retreive-rekognition-data.invoke_arn
- 
-  # adjust to transform the requests into ex: json
-#  request_parameters = {
-#    "method.request.path.proxy" = true
-#  }
-}
-
 resource "aws_api_gateway_resource" "rekognition_data_resource" {
   rest_api_id = aws_api_gateway_rest_api.api.id
   parent_id   = aws_api_gateway_rest_api.api.root_resource_id
@@ -271,6 +255,31 @@ resource "aws_api_gateway_integration_response" "info_integration_response" {
   status_code = aws_api_gateway_method_response.search_getmethod_response.status_code
 }
 
+########
+# video search api TODO 
+########
+resource "aws_api_gateway_resource" "video_id_search_resource" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
+  path_part   = "video_search"
+}
+
+resource "aws_api_gateway_method" "video_search" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_resource.video_id_search_resource.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+resource "aws_api_gateway_integration" "search_lambda_integration" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.video_id_search_resource.id
+  http_method = "POST"
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.search-lambda.invoke_arn
+}
+
 resource "aws_lambda_permission" "apigw_lambda" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
@@ -279,6 +288,28 @@ resource "aws_lambda_permission" "apigw_lambda" {
 
   # More: http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-control-access-using-iam-policies-to-invoke-api.html
   source_arn = "arn:aws:execute-api:us-east-2:${var.accountId}:${aws_api_gateway_rest_api.api.id}/*/${aws_api_gateway_method.search_getmethod.http_method}${aws_api_gateway_resource.search_resource.path}"
+}
+
+
+################################
+# Event Bridge with lambda rule
+################################
+resource "aws_cloudwatch_event_rule" "draw_data" {
+  name = "draw_data"
+  description = "retry scheduled every 2 min"
+  schedule_expression = "rate(2 hours)"
+}
+resource "aws_cloudwatch_event_target" "data_generator_lambda_target" {
+  arn = aws_lambda_function.kickoff-lambda.arn
+  rule = aws_cloudwatch_event_rule.draw_data.name
+}
+
+resource "aws_lambda_permission" "allow_cloudwatch_to_call_rw_fallout_retry_step_deletion_lambda" {
+  statement_id = "AllowExecutionFromCloudWatch"
+  action = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.kickoff-lambda.function_name
+  principal = "events.amazonaws.com"
+  source_arn = aws_cloudwatch_event_rule.draw_data.arn
 }
 
 ###################################
@@ -428,16 +459,57 @@ EOF
   }
 
   inline_policy {
-    name = "read-buckets"
+    name = "buckets-access"
 
     policy = jsonencode({
       Version = "2012-10-17"
       Statement = [
         {
-          Action   = ["s3:GetObject"]
+          Action   = ["s3:*"]
           Effect   = "Allow"
           Resource = "*"
         },
+      ]
+    })
+  }
+  inline_policy {
+    name = "sqs-access"
+    policy = jsonencode({
+      Version = "2012-10-17",
+      Statement = [
+        {
+          Effect= "Allow",
+          Action= "sqs:*",
+          Resource = "*"
+        }]
+    })
+  }
+  inline_policy {
+    name = "lambda-access"
+    policy = jsonencode({
+      Version = "2012-10-17",
+      Statement = [
+        {
+          Effect= "Allow",
+          Action= "lambda:*",
+          Resource = "*"
+        }]
+    })
+  }
+  inline_policy {
+    name = "log-writing-access"
+    policy = jsonencode({
+      Version = "2012-10-17",
+      Statement = [
+          {
+            Effect = "Allow",
+            Action = [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+            ],
+            Resource = "*"
+          }
       ]
     })
   }
@@ -452,7 +524,21 @@ resource "aws_sqs_queue" "youtube_id_queue" {
   max_message_size          = 2048
   message_retention_seconds = 86400
   receive_wait_time_seconds = 10
+  visibility_timeout_seconds = 300
 }
+
+##################################
+# kick off lambda
+##################################
+
+resource "aws_lambda_function" "kickoff-lambda" {
+  function_name = "kickoff-lambda"
+  role = aws_iam_role.iam_for_lambda.arn
+  filename ="kickoff-lambda.zip"
+  runtime = "python3.9"
+  handler = "kickoff_function.lambda_handler"
+}
+
 
 ###################################
 #youtube Video Lambdas
@@ -463,7 +549,7 @@ resource "aws_lambda_function" "search-lambda" {
   role = aws_iam_role.iam_for_lambda.arn
   filename = "search-lambda.zip"
   runtime = "python3.9"
-  handler = "searchvideos.lambda_handler"
+  handler = "video_search_function.lambda_handler"
   layers = [aws_lambda_layer_version.request_layer.arn]
 
   environment {
@@ -485,25 +571,23 @@ resource "aws_lambda_function" "download-lambda" {
   role = aws_iam_role.iam_for_lambda.arn
   filename = "youtube-lambda.zip"
   runtime = "python3.9"
-  handler = "searchvideos.lambda_handler"
+  memory_size = 3008
+  timeout = 300
+  handler = "download_lambda.lambda_handler"
   layers = [aws_lambda_layer_version.pytube_layer.arn]
 
-#  environment {
-#    variables = {
-#      raw-data-bucket = "raw-data-bucket-514-team6"
-#    }
-#  }
   ephemeral_storage {
     size = 10240 # Min 512 MB and the Max 10240 MB
   }
 }
 ##############################
-# SQS to lambda source Mapping
+# SQS to lambda source Mapping I GUESS THIS JUST EXSISTS ALREADY
 ##############################
-#resource "aws_lambda_event_source_mapping" "download_entry" {
+# resource "aws_lambda_event_source_mapping" "download_entry" {
 #  event_source_arn = aws_sqs_queue.youtube_id_queue.arn
 #  function_name    = aws_lambda_function.download-lambda.arn
-#}
+#  enabled = true
+# }
 
 ##############################
 # Lambda layers
