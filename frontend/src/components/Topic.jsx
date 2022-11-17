@@ -9,6 +9,7 @@ import randomColor from 'randomcolor';
 export default function Topic(props) {
     const [topic, setTopic] = useState({startDate: '01/01/2022', endDate: '01/01/2022', smilePercent: 0});
     const [pollCount, setPoll] = useState()
+    const {endpoint} =  require('../Utils/topics.json');
 
     useInterval(() => {
         if (props.polling) {
@@ -17,13 +18,13 @@ export default function Topic(props) {
     }, 1000);
 
     useEffect(() => {
-        fetch('https://jfbyux5iuh.execute-api.us-east-1.amazonaws.com/dev/search?search='+props.name)
+        fetch(endpoint+props.name)
         .then(data => data.json())
         .then(data => {
             let pieData = []
             
-            pieData.push({title: 'Smiling: ', value: data.smilePercent*100, color: randomColor() })
-            pieData.push({title: 'Not smiling: ', value: 100-(data.smilePercent*100), color: randomColor({luminosity: 'light'}) })
+            pieData.push({title: 'Smiling: ', value: data.smilePercent*100, color: randomColor({seed: props.name}) })
+            pieData.push({title: 'Not smiling: ', value: 100-(data.smilePercent*100), color: randomColor({luminosity: 'light', seed: props.name}) })
             return {
                 pieData: pieData,
                 startDate: data.startDate,
@@ -33,7 +34,7 @@ export default function Topic(props) {
         .then(data => {
             setTopic(data);
         })
-    }, [pollCount, props.name]);
+    }, [pollCount, props.name, endpoint]);
 
     return (
             <Card fluid>
