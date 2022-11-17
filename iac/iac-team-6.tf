@@ -25,7 +25,7 @@ variable "accountId" {
 ###################################
 
 resource "aws_s3_bucket" "static-website" {
-  bucket = "static-website-files-514-team6"
+  bucket = "static-website-files-514-team666"
 }
 
 resource "aws_s3_bucket_policy" "static-website-policy" {
