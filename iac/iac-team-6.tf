@@ -613,6 +613,24 @@ resource "aws_lambda_function" "download-lambda" {
 # }
 
 ##############################
+# Upload layer zip file to s3 bucket
+##############################
+# Upload an object
+resource "aws_s3_bucket_object" "layer_file" {
+
+  bucket = aws_s3_bucket.raw-data-bucket.id
+
+  key    = "cv2-python37-layor.zip"
+
+  acl    = "public-read"  # or can be "public-read"
+
+  source = "./cv2-python37-layor.zip"
+
+  etag = filemd5("./cv2-python37-layor.zip")
+
+}
+
+##############################
 # Lambda layers
 ##############################
 resource "aws_lambda_layer_version" "pytube_layer" {
@@ -621,9 +639,9 @@ resource "aws_lambda_layer_version" "pytube_layer" {
 
   compatible_runtimes = ["python3.9"]
 }
-
+# raw-data-bucket-514-team6
 resource "aws_lambda_layer_version" "cv2_layer" {
-  filename   = "cv2-python37-layer.zip"
+  s3_bucket  = "https://" + aws_s3_bucket.raw-data-bucket.name + ".s3.amazonaws.com/cv2-python37-layor.zip"
   layer_name = "cv2"
 
   compatible_runtimes = ["python3.7"]
