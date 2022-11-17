@@ -2,6 +2,7 @@ import json
 import requests
 import os
 import boto3
+import date
 
 sqs_client = boto3.client('sqs')
 api_key = "AIzaSyCywDFrDBrachFLhmO2rUgXGpk6XRCp0fE"
@@ -14,13 +15,13 @@ def lambda_handler(event, context):
 
     json_resp = res.json()
     youtube_id_list = []
+    dynamo_list = set()
     for item in json_resp["items"]:
         video_id = (item["id"]["videoId"])
         youtube_id_list.append(video_id)
-
-    #         need to put hashtag in table here
-    #     dynamodb_client = boto3.client("dynamodb")
-    #     dynamodb_client.put_item(TableName="Hashtag" Item={'Id':{'N':},'name':{'S':query}, 'videoIDs':{'SS':youtube_id_list}, 'searchDate':{'S':date.today()} }
+        dynamo_list.add(video_id)
+    dynamodb_client = boto3.client("dynamodb")
+    dynamodb_client.put_item(TableName="Hashtag" Item={'Id':{'N':},'name':{'S':query}, 'videoIDs':{'SS':youtube_id_list}, 'searchDate':{'S':date.today()} }
 
     message = {
         'statusCode': 200,
