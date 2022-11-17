@@ -78,15 +78,6 @@ resource "aws_s3_bucket_acl" "raw-data-butcket-acl" {
 }
 
 
-/* 
-  FE will fetch data from here. Store data in data.csv file.
-  Format Ex: 
-  topic,text
-  dogs,some text
-  soccer,some text
-  midterms,some text
-  food,some text
-*/
 resource "aws_s3_bucket" "processed-data-bucket" {
   bucket = "processed-data-bucket-514-team6"
   force_destroy = true
