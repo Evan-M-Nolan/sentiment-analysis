@@ -11,8 +11,8 @@ terraform {
 provider "aws" {
   region = "us-east-2"
 
-  access_key = ""
-  secret_key = ""
+  access_key = "AKIASLYTBHMFB5PJCQPA"
+  secret_key = "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"
   token = ""
 }
 
@@ -257,7 +257,7 @@ resource "aws_api_gateway_deployment" "gateway_deployment" {
         aws_api_gateway_resource.rekognition_data_resource.id,
         aws_api_gateway_resource.search_resource.id,
         aws_api_gateway_method.search_getmethod.id,
-        aws_api_gateway_integration.lambdas_info_integration.id,
+        aws_api_gateway_integration.lambda_info_integration.id,
     ]))
   }
 
@@ -663,7 +663,7 @@ resource "aws_lambda_function" "splice-lambda" {
   runtime = "python3.7"
   memory_size = 3008
   timeout = 300
-  handler = "splice-lambda.lambda_handler"
+  handler = "splice_lambda.lambda_handler"
   layers = [aws_lambda_layer_version.cv2_layer.arn]
 
   ephemeral_storage {
