@@ -22,7 +22,7 @@ def lambda_handler(event, context):
         youtube_id_list.append(video_id)
         dynamo_list.add(video_id)
     dynamodb_client = boto3.client("dynamodb")
-    dynamodb_client.put_item(TableName="Hashtag" Item={'Id':{'N':random.random()},'name':{'S':query}, 'videoIDs':{'SS':youtube_id_list}, 'searchDate':{'S':date.today()} }
+    dynamodb_client.put_item(TableName="Hashtag" Item={'Id':{'N':random.getrandbits(128)},'name':{'S':query}, 'videoIDs':{'SS':youtube_id_list}, 'searchDate':{'S':date.today()} }
 
     message = {
         'statusCode': 200,
