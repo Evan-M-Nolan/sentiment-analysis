@@ -639,7 +639,7 @@ resource "aws_lambda_layer_version" "pytube_layer" {
 
   compatible_runtimes = ["python3.9"]
 }
-# raw-data-bucket-514-team6
+# raw-data-bucket-514-team6 
 resource "aws_lambda_layer_version" "cv2_layer" {
   s3_bucket  = "https://" + aws_s3_bucket.raw-data-bucket.name + ".s3.amazonaws.com/cv2-python37-layor.zip"
   layer_name = "cv2"
