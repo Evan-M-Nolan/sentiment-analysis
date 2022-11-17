@@ -4,6 +4,7 @@ import Topic from '../components/Topic';
 import './../styling/RenderResults.css';
 
 export default function RenderResults(props) {
+    const {endpoint} =  require('../Utils/topics.json');
     const [input, setInput] = useState("");
     const [topic, setTopic] = useState("");
     const [show, setShow] = useState(false);
@@ -13,9 +14,17 @@ export default function RenderResults(props) {
         showModal()
     },[input])
 
+    const sendTopic = () => {
+        fetch(endpoint+input, {
+            method: 'POST',
+            mode: 'cors',
+        })
+    }
+
     const onEnter = (e) => {
         if (e.key === 'Enter'){
             onSearch()
+            sendTopic()
         }
     }
 
