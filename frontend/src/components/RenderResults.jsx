@@ -15,7 +15,7 @@ export default function RenderResults(props) {
     },[input])
 
     const sendTopic = () => {
-        fetch(endpoint+input, {
+        fetch(endpoint + 'video_search?search=' + input, {
             method: 'POST',
             mode: 'cors',
         })
@@ -51,7 +51,7 @@ export default function RenderResults(props) {
                   Analysing: {topic}
                 </Modal.Header>
                 <Modal.Content>
-                    <Topic name={topic}/>
+                    <Topic name={topic} polling={true}/>
                 </Modal.Content>
 
                 <Modal.Actions>
