@@ -91,7 +91,7 @@ resource "aws_s3_bucket_policy" "raw-data-bucket-policy" {
 }
 
 resource "aws_s3_bucket" "raw-data-bucket" {
-  bucket = "raw-data-bucket-514-team6"
+  bucket = "raw-data-bucket-514-team666"
   force_destroy = true
 }
 
@@ -111,7 +111,7 @@ resource "aws_s3_bucket_acl" "raw-data-butcket-acl" {
   food,some text
 */
 resource "aws_s3_bucket" "processed-data-bucket" {
-  bucket = "processed-data-bucket-514-team6"
+  bucket = "processed-data-bucket-514-team666"
   force_destroy = true
 }
 
