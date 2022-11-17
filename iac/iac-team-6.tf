@@ -618,15 +618,15 @@ resource "aws_lambda_function" "download-lambda" {
 # Upload an object
 resource "aws_s3_bucket_object" "layer_file" {
 
-  bucket = aws_s3_bucket.raw-data-bucket.id
+  bucket = aws_s3_bucket.raw-data-bucket.bucket
 
-  key    = "cv2-python37-layor.zip"
+  key    = "cv2-python37-layer.zip"
 
   acl    = "public-read"  # or can be "public-read"
 
-  source = "./cv2-python37-layor.zip"
+  source = "./cv2-python37-layer.zip"
 
-  etag = filemd5("./cv2-python37-layor.zip")
+  etag = filemd5("./cv2-python37-layer.zip")
 
 }
 
@@ -641,8 +641,9 @@ resource "aws_lambda_layer_version" "pytube_layer" {
 }
 # raw-data-bucket-514-team6 
 resource "aws_lambda_layer_version" "cv2_layer" {
-  s3_bucket  = "https://" + aws_s3_bucket.raw-data-bucket.name + ".s3.amazonaws.com/cv2-python37-layor.zip"
+  s3_bucket  = aws_s3_bucket.raw-data-bucket.bucket
   layer_name = "cv2"
+  s3_key = "cv2-python37-layer.zip"
 
   compatible_runtimes = ["python3.7"]
 }
@@ -677,7 +678,7 @@ resource "aws_lambda_permission" "test" {
 resource "aws_lambda_function" "splice-lambda" {
   function_name = "slice-video-to-img"
   role = aws_iam_role.iam_for_lambda.arn
-  filename = "splice-lambda.zip"
+  filename = "splice_lambda.zip"
   runtime = "python3.7"
   memory_size = 3008
   timeout = 300
