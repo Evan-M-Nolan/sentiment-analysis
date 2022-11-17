@@ -11,8 +11,8 @@ terraform {
 provider "aws" {
   region = "us-east-2"
 
-  access_key = ""
-  secret_key = ""
+  access_key = "AKIASLYTBHMFB5PJCQPA"
+  secret_key = "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"
   token = ""
 }
 
@@ -91,7 +91,7 @@ resource "aws_s3_bucket_policy" "raw-data-bucket-policy" {
 }
 
 resource "aws_s3_bucket" "raw-data-bucket" {
-  bucket = "raw-data-bucket-514-team6"
+  bucket = "raw-data-bucket-514-team666"
   force_destroy = true
 }
 
@@ -102,7 +102,7 @@ resource "aws_s3_bucket_acl" "raw-data-butcket-acl" {
 
 
 resource "aws_s3_bucket" "processed-data-bucket" {
-  bucket = "processed-data-bucket-514-team6"
+  bucket = "processed-data-bucket-514-team666"
   force_destroy = true
 }
 
