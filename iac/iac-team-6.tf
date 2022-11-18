@@ -293,9 +293,9 @@ resource "aws_api_gateway_method_response" "video-id-search_getmethod_response" 
 resource "aws_api_gateway_integration" "search_lambda_integration" {
   rest_api_id = aws_api_gateway_rest_api.api.id
   resource_id = aws_api_gateway_resource.video_id_search_resource.id
-  http_method = "POST"
+  http_method = "GET"
 
-  integration_http_method = "POST"
+  integration_http_method = "GET"
   type                    = "AWS_PROXY"
   uri                     = aws_lambda_function.search-lambda.invoke_arn
 }
@@ -624,7 +624,7 @@ resource "aws_lambda_function" "download-lambda" {
 # Upload an object
 resource "aws_s3_bucket_object" "layer_file" {
 
-  bucket = aws_s3_bucket.raw-data-bucket.bucket
+  bucket = aws_s3_bucket.raw-data-bucket.id
 
   key    = "cv2-python37-layer.zip"
 
@@ -647,7 +647,7 @@ resource "aws_lambda_layer_version" "pytube_layer" {
 }
 # raw-data-bucket-514-team6 
 resource "aws_lambda_layer_version" "cv2_layer" {
-  s3_bucket  = aws_s3_bucket.raw-data-bucket.bucket
+  s3_bucket  = aws_s3_bucket.raw-data-bucket.id
   layer_name = "cv2"
   s3_key = "cv2-python37-layer.zip"
 
@@ -660,6 +660,9 @@ resource "aws_s3_bucket_notification" "aws-slice-lambda-trigger" {
     lambda_function_arn = aws_lambda_function.splice-lambda.arn
     events              = ["s3:ObjectCreated:*"]
   }
+  depends_on = [
+    aws_lambda_permission.raw-permission
+  ]
 }
 
 resource "aws_s3_bucket_notification" "aws-lambda-trigger" {
@@ -670,13 +673,25 @@ resource "aws_s3_bucket_notification" "aws-lambda-trigger" {
   }
 }
 
-resource "aws_lambda_permission" "test" {
+resource "aws_lambda_permission" "processed-permission" {
   statement_id  = "AllowS3Invoke"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.store-rekognition-data.function_name
   principal = "s3.amazonaws.com"
   source_arn = "arn:aws:s3:::${aws_s3_bucket.processed-data-bucket.id}"
 }
+
+resource "aws_lambda_permission" "raw-permission" {
+  statement_id  = "AllowExecutionFromS3Bucket"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.splice-lambda.arn
+  principal     = "s3.amazonaws.com"
+  source_arn    = aws_s3_bucket.raw-data-bucket.arn
+
+}
+
+
+
 
 #####################
 #Splice Lambda
