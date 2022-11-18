@@ -11,5 +11,5 @@
     "Technology",
     "Love"
   ],
-  "endpoint": ""
+  "endpoint": "https://e18b9npw67.execute-api.us-east-2.amazonaws.com/gateway_stage/"
 }

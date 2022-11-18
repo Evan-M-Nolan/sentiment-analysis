@@ -8,7 +8,7 @@ import randomColor from 'randomcolor';
 
 export default function Topic(props) {
     const [topic, setTopic] = useState({startDate: '01/01/2022', endDate: '01/01/2022', smilePercent: 0});
-    const [pollCount, setPoll] = useState()
+    const [pollCount, setPoll] = useState(0)
     const {endpoint} =  require('../Utils/topics.json');
 
     useInterval(() => {
@@ -18,7 +18,10 @@ export default function Topic(props) {
     }, 1000);
 
     useEffect(() => {
-        fetch(endpoint+props.name)
+        fetch(endpoint + 'search?search=' + props.name, {
+            method: 'GET',
+            mode: 'cors'
+        })
         .then(data => data.json())
         .then(data => {
             let pieData = []
