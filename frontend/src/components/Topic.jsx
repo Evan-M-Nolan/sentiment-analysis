@@ -18,7 +18,10 @@ export default function Topic(props) {
     }, 1000);
 
     useEffect(() => {
-        fetch(endpoint + 'search?search=' + props.name)
+        fetch(endpoint + 'search?search=' + props.name, {
+            method: 'GET',
+            mode: 'cors'
+        })
         .then(data => data.json())
         .then(data => {
             let pieData = []

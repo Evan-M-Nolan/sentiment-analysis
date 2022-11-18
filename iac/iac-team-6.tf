@@ -281,8 +281,14 @@ resource "aws_api_gateway_resource" "video_id_search_resource" {
 resource "aws_api_gateway_method" "video_search" {
   rest_api_id   = aws_api_gateway_rest_api.api.id
   resource_id   = aws_api_gateway_resource.video_id_search_resource.id
-  http_method   = "POST"
+  http_method   = "GET"
   authorization = "NONE"
+}
+resource "aws_api_gateway_method_response" "video-id-search_getmethod_response" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.video_id_search_resource.id 
+  http_method = aws_api_gateway_method.video_search.http_method
+  status_code = 200
 }
 resource "aws_api_gateway_integration" "search_lambda_integration" {
   rest_api_id = aws_api_gateway_rest_api.api.id
@@ -304,6 +310,15 @@ resource "aws_lambda_permission" "apigw_lambda" {
   source_arn = "arn:aws:execute-api:us-east-2:${var.accountId}:${aws_api_gateway_rest_api.api.id}/*/${aws_api_gateway_method.search_getmethod.http_method}${aws_api_gateway_resource.search_resource.path}"
 }
 
+resource "aws_lambda_permission" "apigw_lambda" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.search-lambda.function_name
+  principal     = "apigateway.amazonaws.com"
+
+  # More: http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-control-access-using-iam-policies-to-invoke-api.html
+  source_arn = "arn:aws:execute-api:us-east-2:${var.accountId}:${aws_api_gateway_rest_api.api.id}/*/${aws_api_gateway_method.video_search.http_method}${aws_api_gateway_resource.video_id_search_resource.path}"
+}
 
 ################################
 # Event Bridge with lambda rule

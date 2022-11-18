@@ -15,8 +15,8 @@ export default function RenderResults(props) {
     },[input])
 
     const sendTopic = () => {
-        fetch(endpoint + 'video_search?search=' + input, {
-            method: 'POST',
+        fetch(endpoint + 'video_search?topic=' + input, {
+            method: 'GET',
             mode: 'cors',
         })
     }
