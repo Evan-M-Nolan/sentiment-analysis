@@ -20,12 +20,26 @@ variable "accountId" {
 
 }
 
+resource "random_id" "id" {
+	  byte_length = 8
+}
+
 ###################################
 #S3 Buckets
 ###################################
 
 resource "aws_s3_bucket" "static-website" {
-  bucket = "static-website-files-514-team666"
+  bucket = "${random_id.id.hex}-static-website-files-514-team6"
+}
+
+resource "aws_s3_bucket_website_configuration" "static-website_config" {
+  index_document {
+    suffix = "index.html"
+  }
+
+  error_document {
+    key = "index.html"
+  }
 }
 
 resource "aws_s3_bucket_policy" "static-website-policy" {
@@ -91,7 +105,7 @@ resource "aws_s3_bucket_policy" "raw-data-bucket-policy" {
 }
 
 resource "aws_s3_bucket" "raw-data-bucket" {
-  bucket = "raw-data-bucket-514-team666"
+  bucket = "${random_id.id.hex}-raw-data-bucket-514-team6"
   force_destroy = true
 }
 
@@ -102,7 +116,7 @@ resource "aws_s3_bucket_acl" "raw-data-butcket-acl" {
 
 
 resource "aws_s3_bucket" "processed-data-bucket" {
-  bucket = "processed-data-bucket-514-team666"
+  bucket = "${random_id.id.hex}-processed-data-bucket-514-team6"
   force_destroy = true
 }
 
@@ -201,7 +215,7 @@ resource "aws_cloudfront_distribution" "static-website" {
 ###################################
 
 resource "aws_api_gateway_rest_api" "api" {
- name = "api-gateway-514-team6"
+ name = "${random_id.id.hex}-api-gateway-514-team6"
  description = "Proxy to handle requests to our API"
 }
 
@@ -222,6 +236,13 @@ resource "aws_api_gateway_method" "search_getmethod" {
   resource_id = aws_api_gateway_resource.search_resource.id
   http_method = "GET"
   authorization = "NONE"
+  // indicates whether the query parameter is required
+  request_parameters = {
+    // the required header
+    "method.request.header.Content-Type" = true 
+    // the required query param
+    "method.request.querystring.topic" = true
+  }
 }
 
 resource "aws_api_gateway_method_response" "search_getmethod_response" {
@@ -238,6 +259,18 @@ resource "aws_api_gateway_integration" "lambda_info_integration" {
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = aws_lambda_function.retreive-rekognition-data.invoke_arn
+  request_parameters = { 
+    "integration.request.header.Content-Type" = "method.request.header.Content-Type" 
+    "integration.request.querystring.topic" = "method.request.querystring.topic"
+  }
+  # Transforms the incoming XML request to JSON
+  request_templates = {
+    "application/xml" = <<EOF
+  {
+    "body" : $input.json('$')
+  }
+  EOF
+  }
 }
 
 resource "aws_api_gateway_deployment" "gateway_deployment" {
@@ -464,7 +497,7 @@ EOF
       Version = "2012-10-17"
       Statement = [
         {
-          Action   = ["dynamodb:Get*", "dynamodb:UpdateItem", "dynamodb:Query", "dynamodb:Scan"]
+          Action   = ["dynamodb:Get*", "dynamodb:UpdateItem", "dynamodb:PutItem", "dynamodb:Query", "dynamodb:Scan"]
           Effect   = "Allow"
           Resource = "*"
         },
