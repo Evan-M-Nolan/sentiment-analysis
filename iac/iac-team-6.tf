@@ -33,6 +33,8 @@ resource "aws_s3_bucket" "static-website" {
 }
 
 resource "aws_s3_bucket_website_configuration" "static-website_config" {
+  bucket = aws_s3_bucket.static-website.bucket
+
   index_document {
     suffix = "index.html"
   }
@@ -219,12 +221,6 @@ resource "aws_api_gateway_rest_api" "api" {
  description = "Proxy to handle requests to our API"
 }
 
-resource "aws_api_gateway_resource" "rekognition_data_resource" {
-  rest_api_id = aws_api_gateway_rest_api.api.id
-  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
-  path_part   = "rekognitionData"
-}
-
 resource "aws_api_gateway_resource" "search_resource" {
   rest_api_id = aws_api_gateway_rest_api.api.id
   parent_id   = aws_api_gateway_rest_api.api.root_resource_id
@@ -278,7 +274,6 @@ resource "aws_api_gateway_deployment" "gateway_deployment" {
 
   triggers = {
       redeployment = sha1(jsonencode([
-        aws_api_gateway_resource.rekognition_data_resource.id,
         aws_api_gateway_resource.search_resource.id,
         aws_api_gateway_method.search_getmethod.id,
         aws_api_gateway_integration.lambda_info_integration.id,
@@ -378,63 +373,63 @@ resource "aws_lambda_permission" "allow_cloudwatch_to_call_rw_fallout_retry_step
 #Upload files for static website
 ###################################
 resource "aws_s3_bucket_object" "html" {
-  for_each = fileset("./../frontend/", "**/*.html")
+  for_each = fileset("./../frontend/build/", "**/*.html")
 
   bucket = aws_s3_bucket.static-website.id
   key    = each.value
-  source = "./../frontend/${each.value}"
-  etag   = filemd5("./../frontend/${each.value}")
+  source = "./../frontend/build/${each.value}"
+  etag   = filemd5("./../frontend/build/${each.value}")
   content_type = "text/html"
 }
 
 resource "aws_s3_bucket_object" "svg" {
-  for_each = fileset("./../frontend/", "**/*.svg")
+  for_each = fileset("./../frontend/build/", "**/*.svg")
 
   bucket = aws_s3_bucket.static-website.id
   key    = each.value
-  source = "./../frontend/${each.value}"
-  etag   = filemd5("./../frontend/${each.value}")
+  source = "./../frontend/build/${each.value}"
+  etag   = filemd5("./../frontend/build/${each.value}")
   content_type = "image/svg+xml"
 }
 
 resource "aws_s3_bucket_object" "css" {
-  for_each = fileset("./../frontend/", "**/*.css")
+  for_each = fileset("./../frontend/build/", "**/*.css")
 
   bucket = aws_s3_bucket.static-website.id
   key    = each.value
-  source = "./../frontend/${each.value}"
-  etag   = filemd5("./../frontend/${each.value}")
+  source = "./../frontend/build/${each.value}"
+  etag   = filemd5("./../frontend/build/${each.value}")
   content_type = "text/css"
 }
 
 resource "aws_s3_bucket_object" "js" {
-  for_each = fileset("./../frontend/", "**/*.js")
+  for_each = fileset("./../frontend/build/", "**/*.js")
 
   bucket = aws_s3_bucket.static-website.id
   key    = each.value
-  source = "./../frontend/${each.value}"
-  etag   = filemd5("./../frontend/${each.value}")
+  source = "./../frontend/build/${each.value}"
+  etag   = filemd5("./../frontend/build/${each.value}")
   content_type = "application/javascript"
 }
 
 
 resource "aws_s3_bucket_object" "images" {
-  for_each = fileset("./../frontend/", "**/*.png")
+  for_each = fileset("./../frontend/build/", "**/*.png")
 
   bucket = aws_s3_bucket.static-website.id
   key    = each.value
-  source = "./../frontend/${each.value}"
-  etag   = filemd5("./../frontend/${each.value}")
+  source = "./../frontend/build/${each.value}"
+  etag   = filemd5("./../frontend/build/${each.value}")
   content_type = "image/png"
 }
 
 resource "aws_s3_bucket_object" "json" {
-  for_each = fileset("./../frontend/", "**/*.json")
+  for_each = fileset("./../frontend/build/", "**/*.json")
 
   bucket = aws_s3_bucket.static-website.id
   key    = each.value
-  source = "./../frontend/${each.value}"
-  etag   = filemd5("./../frontend/${each.value}")
+  source = "./../frontend/build/${each.value}"
+  etag   = filemd5("./../frontend/build/${each.value}")
   content_type = "application/json"
 }
 
