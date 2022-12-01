@@ -11,8 +11,8 @@ terraform {
 provider "aws" {
   region = "us-east-2"
 
-  access_key = "AKIASLYTBHMFB5PJCQPA"
-  secret_key = "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"
+  access_key = "AKIAVMB33HZKAAHHW67B"
+  secret_key = "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"
   token = ""
 }
 
@@ -275,8 +275,11 @@ resource "aws_api_gateway_deployment" "gateway_deployment" {
   triggers = {
       redeployment = sha1(jsonencode([
         aws_api_gateway_resource.search_resource.id,
+        aws_api_gateway_resource.video_id_search_resource.id,
         aws_api_gateway_method.search_getmethod.id,
-        aws_api_gateway_integration.lambda_info_integration.id,
+        aws_api_gateway_method.video_search.id,
+        aws_api_gateway_integration.search_lambda_integration.id,
+        aws_api_gateway_integration.lambda_info_integration.id
     ]))
   }
 
@@ -290,6 +293,7 @@ resource "aws_api_gateway_stage" "gateway_stage" {
   rest_api_id   = aws_api_gateway_rest_api.api.id
   stage_name    = "gateway_stage"
 }
+
 resource "aws_api_gateway_integration_response" "info_integration_response" {
   rest_api_id = aws_api_gateway_rest_api.api.id
   resource_id = aws_api_gateway_resource.search_resource.id
@@ -680,6 +684,8 @@ resource "aws_lambda_layer_version" "cv2_layer" {
   s3_key = "cv2-python37-layer.zip"
 
   compatible_runtimes = ["python3.7"]
+
+  depends_on = [aws_s3_bucket_object.layer_file]
 }
 
 resource "aws_s3_bucket_notification" "aws-slice-lambda-trigger" {
