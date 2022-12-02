@@ -1,10 +1,20 @@
-# How to use this IAC file
+# Welcome to the youtube sentiment analysis project!
+A few things in this here readme. to do this you will need
+1. a free tier account
+To start the terraform and spin up the IAC follow these instructions
 
-- you need to install terraform following instructions in the tutorial we used [here|https://learn.hashicorp.com/tutorials/terraform/aws-build?in=terraform/aws-get-started]
-- navigate to the iac folder and run `terraform init`
-- There is currently an issue and inorder to run the code you need to add these lines
-`provider "aws" {region = "us-east-2" access_key = "access_key" secret_key="secret key"`
-}
-Do not add these changes to the git
-- ensure you have edited the iac-team-6.tf file to add the proper access keys (this is just for now while we test)
-- run `terraform apply` to build the stuff, use `terraform destroy` to remove it
+The goal of this little testable demo to follow is to show you that the system works while
+also not draining our wonderful TA's or Professor's wallet. 
+
+So we will be creating our project and running a test query on the website, and then waiting for the results to come in.
+
+
+1. Fill in the secrets: Access key, and Secret key (optional fill in account id)
+2. `terraform init`
+3. `terraform apply`
+4. `terraform apply` No I did not mistype you have to apply twice for it to run with out errors. 
+
+after that there a few safe guards set to prevent you losing all of your money instantly that will need to be disabled to get the project working.
+1. 
+
+

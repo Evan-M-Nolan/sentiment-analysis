@@ -11,8 +11,8 @@ terraform {
 provider "aws" {
   region = "us-east-2"
 
-  access_key = "AKIAVMB33HZKAAHHW67B"
-  secret_key = "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"
+  access_key = "AKIASLYTBHMFB5PJCQPA"
+  secret_key = "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"
   token = ""
 }
 
@@ -639,6 +639,11 @@ resource "aws_lambda_function" "download-lambda" {
 
   ephemeral_storage {
     size = 10240 # Min 512 MB and the Max 10240 MB
+  }
+  environment {
+    variables = {
+      bucket_name = aws_s3_bucket.raw-data-bucket.bucket
+    }
   }
 }
 ##############################

@@ -1,16 +1,18 @@
-# Welcome to JEMPC read me for cloud.
-For the hw-4 script you need to have run the aws configure before either script will work.
+# Welcome to the youtube sentiment analysis project!
+A few things in this here readme. to do this you will need
+1. a free tier account
+To start the terraform and spin up the IAC follow these instructions
 
-# Usage
+The goal of this little testable demo to follow is to show you that the system works while
+also not draining our wonderful TA's or Professor's wallet. 
 
-## Setup
-you will want to run `aws configure` to be sure everything will run smoothly. Our scripts will create/delete all of the resources in us-east-1
- 
-## Build
-`source ./ez-homework-4-script.sh` will run the build script
+So we will be creating our project and running a test query on the website, and then waiting for the results to come in.
 
-## Teardown
-`source ./ez-hw4-teardown.script.sh`
 
-## Source
-we use `source` to ensure our environment variables are set appropriately for the bash session and the scripts have access to each others variables.
+1. Fill in the secrets: Access key, and Secret key (optional fill in account id)
+2. `terraform init`
+3. `terraform apply`
+4. `terraform apply` No I did not mistype you have to apply twice for it to run with out errors. 
+
+after that there a few safe guards set to prevent you losing all of your money instantly.
+
