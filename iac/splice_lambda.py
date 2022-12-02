@@ -1,4 +1,5 @@
 import json
+import os
 import boto3 as boto3
 import logging
 import cv2
@@ -24,7 +25,7 @@ def getFrame(sec, vidcap, count, destination_bucket_folder, videoId):
 
 def lambda_handler(event, context):
     # Bucket to store images
-    destination_bucket_name = 'processed-data-bucket-514-team6'
+    destination_bucket_name = os.environ.get('destination_bucket')
 
     # Bucket Name where video file gets pulled from
     source_bucket_name = event['Records'][0]['s3']['bucket']['name']

@@ -11,8 +11,8 @@ terraform {
 provider "aws" {
   region = "us-east-2"
 
-  access_key = "AKIASLYTBHMFB5PJCQPA"
-  secret_key = "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"
+  access_key = "AKIARXXPKH3BWC66AOF6"
+  secret_key = "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"
   token = ""
 }
 
@@ -255,18 +255,6 @@ resource "aws_api_gateway_integration" "lambda_info_integration" {
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = aws_lambda_function.retreive-rekognition-data.invoke_arn
-  request_parameters = { 
-    "integration.request.header.Content-Type" = "method.request.header.Content-Type" 
-    "integration.request.querystring.topic" = "method.request.querystring.topic"
-  }
-  # Transforms the incoming XML request to JSON
-  request_templates = {
-    "application/xml" = <<EOF
-  {
-    "body" : $input.json('$')
-  }
-  EOF
-  }
 }
 
 resource "aws_api_gateway_deployment" "gateway_deployment" {
@@ -279,7 +267,9 @@ resource "aws_api_gateway_deployment" "gateway_deployment" {
         aws_api_gateway_method.search_getmethod.id,
         aws_api_gateway_method.video_search.id,
         aws_api_gateway_integration.search_lambda_integration.id,
-        aws_api_gateway_integration.lambda_info_integration.id
+        aws_api_gateway_integration.lambda_info_integration.id,
+        aws_api_gateway_integration_response.info_integration_response.id,
+        aws_api_gateway_integration_response.search_integration_response.id
     ]))
   }
 
@@ -302,7 +292,7 @@ resource "aws_api_gateway_integration_response" "info_integration_response" {
 }
 
 ########
-# video search api TODO 
+# video search api
 ########
 resource "aws_api_gateway_resource" "video_id_search_resource" {
   rest_api_id = aws_api_gateway_rest_api.api.id
@@ -327,9 +317,16 @@ resource "aws_api_gateway_integration" "search_lambda_integration" {
   resource_id = aws_api_gateway_resource.video_id_search_resource.id
   http_method = "GET"
 
-  integration_http_method = "GET"
+  integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = aws_lambda_function.search-lambda.invoke_arn
+}
+
+resource "aws_api_gateway_integration_response" "search_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.video_id_search_resource.id
+  http_method = aws_api_gateway_method.video_search.http_method
+  status_code = aws_api_gateway_method_response.video-id-search_getmethod_response.status_code
 }
 
 resource "aws_lambda_permission" "apigw_lambda" {
@@ -747,6 +744,12 @@ resource "aws_lambda_function" "splice-lambda" {
 
   ephemeral_storage {
     size = 10240 # Min 512 MB and the Max 10240 MB
+  }
+
+  environment {
+    variables = {
+      destination_bucket = aws_s3_bucket.processed-data-bucket.bucket
+    }
   }
 }
 
