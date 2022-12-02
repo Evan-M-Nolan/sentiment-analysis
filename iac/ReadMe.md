@@ -22,6 +22,9 @@ So we will be creating our project and running a test query on the website, and 
 3. `terraform apply`
 4. `terraform apply` No I did not mistype you have to apply twice for it to run without errors. It is a known issue.
  
+ # Log into aws in free tier account to the console page
+ make sure you are in US-2 ohio.
+ 
 After that there are a few safeguards set to prevent you losing all of your money instantly that will need to be disabled to get the project working.
 1. go to api gateway and copy the invoke url from deployed stage
 2. go the s3 static -files bucket in the static/js inside the main js file download that file ctrl+f for "api", replace this with the invoke url.
