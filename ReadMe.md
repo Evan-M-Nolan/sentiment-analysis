@@ -40,21 +40,23 @@ The following steps are intentional as a safeguard against Rekognition eating up
 14. Go to the download-video-to-s3 lambda and enable the sqs trigger. 
 15. (Optionally) add a sqs trigger for the only defined topic.
  
-Visiting the website:
-
+# Visiting the website:
 1. open cloudfront in the AWS console
 2. click on the active distribution
 3. copy the "Distribution domain name" in the details section at the top
 4. paste into new tab and enjoy!
 
 # Testing: 
-1. On the web page search a single word topic. Into the search bar and press enter
-2. wait about 2~5 minutes for the results to go back
+1. On the web page type a single word topic into the search bar and press enter.
+2. wait about 2~5 minutes for the results to process (do not exit the search result modal)
 3. view and grade!
 
-# run destroy before 2 hours.
-if it runs for 6 hours it collects videos 3 times it costs ~ 6 dollars
-If destroyed before it should be less than 2$
- 
+# Destroy steps:
+1. Make sure to destroy before 2 hours has passed since creating!
+If it runs for 6 hours it collects videos 3 times it costs ~ 6 dollars
+2. In order to destroy, make sure you are in the "iac" folder
+3. type `terraform destroy`
+4. follow the console prompts
+5. ensure there are no error messages
  
 
