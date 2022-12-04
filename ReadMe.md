@@ -1,40 +1,57 @@
 # Welcome to the youtube sentiment analysis project!
-A few things in this here readme. to do this you will need
+As some prerequisites to starting our project, you will need
 1. a free tier account
-To start the terraform and spin up the IAC follow these instructions
- 
-The goal of this little testable demo to follow is to show you that the system works while
-also not draining our wonderful TA's or Professor's wallet.
- 
-So we will be creating our project and running a test query on the website, and then waiting for the results to come in.
- 
-## Steps
-1. set up front end
-1. 1. `npm install`
-1. 2. `npm run build`
- 
-# Go to Iac
-1. `cd ../iac`
+2. our AMI running in a free tier account
+3. The access key, secret key, and account ID of the user you will be running this as
+4. ensure that your user associated with the keys has full admin access
+
  
 # Terraform steps
-1. Fill in the secrets: Access key, and Secret key (optional fill in account id)
-2. `terraform init`
-3. `terraform apply`
-4. `terraform apply` No I did not mistype you have to apply twice for it to run without errors. It is a known issue.
+1. `cd ../iac`
+2. Open the file iac-team-6.tf
+3. On line 14 fill in the access key for your user
+4. On line 15 fill in the Secret key for your user
+5. `terraform apply`
+6. paste your account id when prompted
+7. type yes when prompted
+8. `terraform apply` No I did not mistype you have to apply twice for it to run without errors. It is a known issue that we could not resolve and there is an open issue for. (https://github.com/hashicorp/terraform-provider-aws/issues/4001)
+9. repeat steps 5 and 6
  
- # Log into aws in free tier account to the console page
- make sure you are in US-2 ohio.
+ # AWS console steps
+1. Log into your aws free tier account at https://aws.amazon.com/
+2. make sure you are in US-2 ohio.
  
-After that there are a few safeguards set to prevent you losing all of your money instantly that will need to be disabled to get the project working.
-1. go to api gateway and copy the invoke url from deployed stage
-2. go the s3 static -files bucket in the static/js inside the main js file download that file ctrl+f for "api", replace this with the invoke url.
-Ensure it ends with a "/", re-upload that file to the same folder
-Go to the lambda functions. Go to the download-video-to-s3 lambda and enable the sqs trigger. (Optionally) add a sqs trigger for the only defined topic.
+Because the api gateway can't currently deploy on the first "apply" the following steps are to tell the frontend what url the backend is located at:
+1. go to api gateway 
+2. click on stages on the left
+3. click the deployed stage "gateway_stage" 
+4. copy the invoke url from deployed stage
+5. go the s3 bucket called "<random-id>-static-website-files-514-team6" 
+6. go to the static/js folder 
+7. download the main.js file 
+8. open in any text editor
+9. ctrl+f for "execute-api" 
+10. replace this entire url with the invoke url copied in step 4
+11. IMPORTANT: ensure it ends with a "/"
+12. re-upload that file to the same folder using the same name
+
+The following steps are intentional as a safeguard against Rekognition eating up money before the user is ready:
+13. Go to the lambda functions. 
+14. Go to the download-video-to-s3 lambda and enable the sqs trigger. 
+15. (Optionally) add a sqs trigger for the only defined topic.
  
-Go to the static website bucket url in a browser search for a topic and wait for about five minutes!
-# Testing. ON the front end search a single word topic.
-wait about 2~5 minutes for the results to go back
-view and grade!
+Visiting the website:
+
+1. open cloudfront in the AWS console
+2. click on the active distribution
+3. copy the "Distribution domain name" in the details section at the top
+4. paste into new tab and enjoy!
+
+# Testing: 
+1. On the web page search a single word topic. Into the search bar and press enter
+2. wait about 2~5 minutes for the results to go back
+3. view and grade!
+
 # run destroy before 2 hours.
 if it runs for 6 hours it collects videos 3 times it costs ~ 6 dollars
 If destroyed before it should be less than 2$
