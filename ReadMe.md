@@ -7,7 +7,7 @@ As some prerequisites to starting our project, you will need
 
  
 # Terraform steps
-1. `cd ../iac`
+1. `cd ./term-project-team-6/iac/`
 2. Open the file iac-team-6.tf
 3. On line 14 fill in the access key for your user
 4. On line 15 fill in the Secret key for your user
